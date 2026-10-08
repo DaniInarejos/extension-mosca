@@ -9,3 +9,5 @@ public/brain/flywire-worker.js
 *.p12
 *.pfx
 *.crx
+playwright-report/
+blob-report/

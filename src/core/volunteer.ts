@@ -1,8 +1,7 @@
 import type { SimulationLease, VolunteerState, WorldState } from './simulation/protocol/index';
 import { MotorBehavior } from './simulation/behavior/index';
 import { advanceLocalFly } from './simulation/physics/local-step';
-import { FlyWireAdapter } from './brain';
-import { volunteerCapacity } from './runtime/volunteer-capacity';
+import type { Brain, BrainFactory, Clock } from './ports';
 
 const SEND_INTERVAL_MS = 750;
 const HEARTBEAT_INTERVAL_MS = 10_000;
@@ -15,7 +14,7 @@ type Runtime = {
   lease: SimulationLease;
   fly: SimulationLease['fly'];
   behavior: MotorBehavior;
-  brain: FlyWireAdapter;
+  brain: Brain;
   ready: boolean;
   pendingAction?: 'FEED' | 'DRINK';
   lastFeed: number;
@@ -23,22 +22,28 @@ type Runtime = {
 
 /** Copied from the web client for the extension 0.1; no shared package dependency. */
 export class VolunteerBrains {
-  readonly supportedCapacity = volunteerCapacity();
-  readonly enabled = this.supportedCapacity > 0;
+  readonly enabled: boolean;
   private runtimes = new Map<string, Runtime>();
   private startupQueue = Promise.resolve();
   private lastSend = 0;
   private lastHeartbeat = 0;
   private announcedCapacity = -1;
 
-  constructor(private send: (message: VolunteerMessage) => void) {}
+  constructor(
+    private send: (message: VolunteerMessage) => void,
+    private createBrain: BrainFactory,
+    readonly supportedCapacity: number,
+    private clock: Clock,
+  ) {
+    this.enabled = supportedCapacity > 0;
+  }
 
   announce(force = false) {
     const capacity = this.enabled ? this.supportedCapacity : 0;
     if (force || capacity !== this.announcedCapacity) {
       this.send({ type: 'VOLUNTEER_CAPACITY', capacity });
       this.announcedCapacity = capacity;
-      this.lastHeartbeat = performance.now();
+      this.lastHeartbeat = this.clock.now();
     }
   }
 
@@ -70,7 +75,7 @@ export class VolunteerBrains {
         lease,
         fly: structuredClone(lease.fly),
         behavior: new MotorBehavior(lease.fly.flyId),
-        brain: new FlyWireAdapter(lease.tickRate),
+        brain: this.createBrain(lease.tickRate),
         ready: false,
         lastFeed: 0,
       };
@@ -127,7 +132,7 @@ export class VolunteerBrains {
       }
     }
     if (now - this.lastSend < SEND_INTERVAL_MS) return;
-    const timestamp = Date.now();
+    const timestamp = this.clock.timestamp();
     const states: VolunteerState[] = [];
     for (const runtime of this.runtimes.values()) {
       if (!runtime.ready) continue;

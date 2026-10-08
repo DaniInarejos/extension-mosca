@@ -30,29 +30,11 @@ export type FlySnapshot = {
   updatedAt: number;
 };
 
-export type ExtensionConfig = {
-  enabled: boolean;
+export type RunnerConfig = {
   serverUrl: string;
   token: string;
 };
+import type { z } from 'zod';
+import type { clientMessageSchema } from './simulation/protocol/index';
 
-export const DEFAULT_CONFIG: ExtensionConfig = {
-  enabled: false,
-  serverUrl: 'https://moscas.lol',
-  token: '',
-};
-
-export const IDLE_STATUS: RunnerStatus = {
-  state: 'idle',
-  detail: 'El cerebro está detenido.',
-  updatedAt: 0,
-};
-
-export type ExtensionMessage =
-  | { type: 'GET_STATE' }
-  | { type: 'START'; config: Omit<ExtensionConfig, 'enabled'> }
-  | { type: 'STOP' }
-  | { type: 'RUNNER_START'; config: ExtensionConfig }
-  | { type: 'RUNNER_STOP' }
-  | { type: 'RUNNER_SNAPSHOT' }
-  | { type: 'RUNNER_STATUS'; status: RunnerStatus };
+export type ClientMessage = z.infer<typeof clientMessageSchema>;

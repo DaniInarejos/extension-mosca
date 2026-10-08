@@ -16,12 +16,64 @@ Como el cliente web, la extensión puede acoger temporalmente cerebros de moscas
 
 ## Desarrollo
 
+Requiere Node.js 22 y npm. La compilación actual genera únicamente el cliente de Chrome.
+
 ```bash
-npm install
-npm run build
+npm ci
+npm run test:e2e:install
+npm run check
 ```
 
-Después, abre `chrome://extensions`, activa el modo desarrollador y carga `dist/` como extensión descomprimida.
+Playwright descarga su propio Chromium de pruebas en una caché y usa perfiles temporales.
+No hace falta instalar Google Chrome como navegador. `npm run build` genera `dist/` si
+solo necesitas compilar la extensión.
+
+`npm run check` comprueba los límites entre capas, ejecuta las pruebas, verifica los tipos,
+compila la extensión, prueba la extensión real en Chromium headless y realiza la auditoría
+pública. El comando se puede ejecutar localmente o integrar en el sistema de CI que se
+elija; por ahora no hay ningún proveedor de CI configurado.
+
+## Pruebas de navegador
+
+`npm run test:e2e` compila y carga la extensión real en Chromium. Comprueba el popup,
+la edición del formulario, la validación del token, el documento offscreen y la persistencia
+del estado desactivado al reiniciar. No usa un servidor simulado ni inicia una sesión.
+
+Para probar una sesión completa, proporciona `MOSCAS_DEVICE_TOKEN` como variable de entorno
+y ejecuta `npm run test:e2e:live`. Esta prueba se conecta directamente a **https://moscas.lol**
+y ejecuta el cerebro real. No forma parte del CI ni de `npm run check`; sin token falla
+con un mensaje explícito. Se comprueban conexión, continuidad sin popup, reconexión,
+reanudación tras reiniciar y parada. La suite también corta el transporte TCP y bloquea
+el tráfico sin cerrar conexiones mediante un proxy CONNECT local, siempre contra moscas.lol.
+No descifra TLS ni simula respuestas del servidor. `npm run test:e2e:outage` ejecuta
+solo los escenarios de corte, recuperación y cancelación.
+
+El runner limita las peticiones HTTP a 15 segundos, la espera de bienvenida a 20 segundos
+y el silencio del servidor a 45 segundos. Al detectar un corte libera los cerebros y
+reconecta con espera creciente hasta 30 segundos. **Detener** cancela también peticiones
+pendientes para evitar arranques tardíos cuando vuelve la red.
+
+La prueba real utiliza tu mosca: deja libre su control cerrando el jardín y deteniendo
+otros clientes. No pegues el token en archivos del repositorio. No se guardan trazas,
+vídeos ni capturas, y el perfil con sus credenciales se elimina al terminar normalmente
+o tras un fallo de prueba. Si el proceso se termina de forma forzosa, puede quedar un
+directorio temporal `moskas-playwright-*` que debe eliminarse.
+
+La extensión Firefox se verificará manualmente. El soporte de extensiones de Playwright
+utilizado aquí es exclusivo de Chromium; no se configura un proyecto Firefox que dé
+una falsa impresión de cobertura. Consulta [la guía de pruebas](docs/PRUEBAS.md).
+
+## Organización del código
+
+- `src/core/`: simulación, protocolo, contratos HTTP y coordinación del cerebro. No depende de Chrome, del DOM ni de una interfaz gráfica.
+- `src/adapters/web/`: implementaciones con Web Worker, fetch, WebSocket y temporizadores. Pueden reutilizarse en otros clientes compatibles con estas APIs.
+- `src/clients/chrome/`: background, documento offscreen, mensajes, almacenamiento y popup de Chrome.
+- `src/brain/` y `public/brain/`: fuentes del kernel, adaptador neuronal, modelo y datos FlyWire con su procedencia y atribución.
+
+Firefox y escritorio aún no están implementados. Se incorporarán como clientes del mismo
+núcleo, aportando su ciclo de vida, almacenamiento y adaptadores de plataforma.
+Consulta [`docs/ARQUITECTURA.md`](docs/ARQUITECTURA.md) antes de añadir un cliente o cambiar
+estas responsabilidades.
 
 El servidor de Moskas debe implementar `POST /api/device/simulation-ticket` y aceptar el ticket de un solo uso en `/ws/device`.
 
