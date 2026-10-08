@@ -6,16 +6,17 @@
   "copies": [
     {
       "source": "packages/protocol",
-      "destination": "src/simulation/protocol",
+      "destination": "src/core/simulation/protocol",
       "note": "Public client protocol subset; privileged royal types are excluded."
     },
     {
       "source": "apps/client/src/volunteer.ts",
-      "destination": "src/volunteer.ts"
+      "destination": "src/core/volunteer.ts",
+      "note": "Local adaptation: brain factory, capacity and clock are injected by the client."
     },
     {
       "source": "apps/client/src/runtime/volunteer-capacity.ts",
-      "destination": "src/runtime/volunteer-capacity.ts"
+      "destination": "src/adapters/web/volunteer-capacity.ts"
     },
     {
       "source": "apps/client/src/ui/fly-portrait.ts",

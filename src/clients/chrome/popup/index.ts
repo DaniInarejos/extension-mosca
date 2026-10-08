@@ -1,5 +1,6 @@
-import { flyColorHex, type FlyColor } from '../simulation/protocol/appearance';
-import type { ExtensionConfig, ExtensionMessage, FlySnapshot, RunnerStatus } from '../shared';
+import { flyColorHex, type FlyColor } from '../../../core/simulation/protocol/appearance';
+import type { ExtensionConfig, ExtensionMessage } from '../messages';
+import type { FlySnapshot, RunnerStatus } from '../../../core/types';
 import './style.css';
 
 const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
@@ -13,6 +14,11 @@ const energyTrack = document.querySelector<HTMLElement>('.energy-track')!;
 const connection = $<HTMLDetailsElement>('connection');
 let flySeen = false;
 let refreshing = false;
+let connectionEdited = false;
+
+for (const input of [server, token]) {
+  input.addEventListener('input', () => { connectionEdited = true; });
+}
 
 const connectionNames: Record<RunnerStatus['state'], string> = {
   idle: 'Detenida',
@@ -93,8 +99,10 @@ async function state() {
       status: RunnerStatus;
       fly?: FlySnapshot;
     };
-    server.value = result.config.serverUrl;
-    token.value = result.config.token;
+    if (!connectionEdited) {
+      server.value = result.config.serverUrl;
+      token.value = result.config.token;
+    }
     show(result.status);
     renderFly(result.fly);
     if (result.fly && !flySeen) connection.open = false;

@@ -10,7 +10,7 @@ export default defineConfig({
     emptyOutDir: true,
     rollupOptions: {
       input: {
-        background: resolve(root, 'src/background/index.ts'),
+        background: resolve(root, 'src/clients/chrome/background.ts'),
         popup: resolve(root, 'popup.html'),
         offscreen: resolve(root, 'offscreen.html'),
       },

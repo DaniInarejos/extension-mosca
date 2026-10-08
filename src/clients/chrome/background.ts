@@ -3,8 +3,8 @@ import {
   IDLE_STATUS,
   type ExtensionConfig,
   type ExtensionMessage,
-  type RunnerStatus,
-} from '../shared';
+} from './messages';
+import type { RunnerStatus } from '../../core/types';
 
 const OFFSCREEN_PATH = 'offscreen.html';
 let creating: Promise<void> | undefined;

@@ -3,7 +3,7 @@ import type {
   SensoryInput,
   MotorOutput,
   NeuralActivity,
-} from '../simulation/protocol/index';
+} from '../../core/simulation/protocol/index';
 export class FlyWireAdapter implements FlyWireBrain {
   private worker?: Worker;
   private startup?: AbortController;
@@ -21,19 +21,22 @@ export class FlyWireAdapter implements FlyWireBrain {
     motor: { forward: 0, turn: 0, lift: 0, feed: 0 },
   };
   onError: (message: string) => void = () => {};
-  constructor(private tickRate = 30) {}
+  constructor(
+    private resolveAssetUrl: (path: string) => string,
+    private tickRate = 30,
+  ) {}
   async initialize() {
     if (this.worker || this.startup) throw new Error('El cerebro ya se está iniciando.');
     const controller = (this.startup = new AbortController());
     try {
       const [response, sides] = await Promise.all([
-        fetch(chrome.runtime.getURL('brain/connectome.bin.gz'), { signal: controller.signal }),
-        fetch(chrome.runtime.getURL('brain/laterality.bin'), { signal: controller.signal }),
+        fetch(this.resolveAssetUrl('brain/connectome.bin.gz'), { signal: controller.signal }),
+        fetch(this.resolveAssetUrl('brain/laterality.bin'), { signal: controller.signal }),
       ]);
       if (!response.ok || !sides.ok) throw new Error('No se pudo cargar el conectoma local.');
       const [buffer, laterality] = await Promise.all([response.arrayBuffer(), sides.arrayBuffer()]);
       if (controller.signal.aborted) throw new DOMException('Inicio cancelado.', 'AbortError');
-      this.worker = new Worker(chrome.runtime.getURL('brain/flywire-worker.js'));
+      this.worker = new Worker(this.resolveAssetUrl('brain/flywire-worker.js'));
       await new Promise<void>((resolve, reject) => {
         const cleanup = () => {
           clearTimeout(this.startupTimer);

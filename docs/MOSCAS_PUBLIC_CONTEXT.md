@@ -55,7 +55,7 @@ Las operaciones administrativas quedan deliberadamente fuera de esta referencia 
 
 ## Protocolo WebSocket del jardín
 
-Los esquemas y tipos fuente viven en [`src/simulation/protocol`](../src/simulation/protocol). El servidor valida estrictamente cada mensaje.
+Los esquemas y tipos fuente viven en [`src/core/simulation/protocol`](../src/core/simulation/protocol). El servidor valida estrictamente cada mensaje.
 
 ### Extensión → servidor
 
@@ -92,7 +92,7 @@ El servidor mantiene la autoridad: valida velocidad, colisiones, identidad, leas
 - `natural-events.ts`: fenómenos visibles del jardín.
 - `points.ts`, `shop.ts`: contratos públicos que llegan por el protocolo aunque la extensión todavía no los muestre.
 - `presence.ts`, `user.ts`, `world-delta.ts`: presencia, roles visibles en chat y deltas del mundo.
-- [`src/api/public-contract.ts`](../src/api/public-contract.ts): respuestas HTTP útiles para una extensión o dispositivo normal.
+- [`src/core/api/public-contract.ts`](../src/core/api/public-contract.ts): respuestas HTTP útiles para una extensión o dispositivo normal.
 
 Esta copia evita una librería compartida durante la 0.1. Al actualizarla hay que comparar con `packages/protocol` del proyecto Moscas, revisar el diff manualmente, excluir contratos privilegiados y ejecutar:
 
