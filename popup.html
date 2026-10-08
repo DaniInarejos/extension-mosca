@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Moskas Brain</title>
+  </head>
+  <body>
+    <main>
+      <header>
+        <span class="mark">M</span>
+        <div><h1>Moskas Brain</h1><p>Extensión experimental 0.1</p></div>
+      </header>
+      <div id="status" class="status" data-kind="idle">Detenida</div>
+      <label>Servidor<input id="server" type="url" value="https://moscas.lol" /></label>
+      <label>Token de dispositivo<input id="token" type="password" autocomplete="off" placeholder="fly_device_…" /></label>
+      <p class="hint">El token queda guardado únicamente en este navegador.</p>
+      <div class="actions">
+        <button id="start" type="button">Iniciar cerebro</button>
+        <button id="stop" class="secondary" type="button">Detener</button>
+      </div>
+      <p id="detail" class="detail"></p>
+    </main>
+    <script type="module" src="/src/popup/index.ts"></script>
+  </body>
+</html>

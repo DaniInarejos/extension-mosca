@@ -1,0 +1,5 @@
+node_modules/
+dist/
+public/brain/flywire-worker.js
+.env
+*.log

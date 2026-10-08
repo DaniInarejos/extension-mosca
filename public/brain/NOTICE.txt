@@ -1,0 +1,9 @@
+FlyWire FAFB v783 derived connectome and neuron annotations.
+From snedea/flybrain revision 9191824d17871b7851645782d53d23f213ddb938.
+139,255 neurons; 2,698,236 filtered, weighted connections.
+Dataset attribution: FlyWire Consortium, CC BY 4.0.
+https://creativecommons.org/licenses/by/4.0/
+Dorkenwald et al., Nature (2024), https://doi.org/10.1038/s41586-024-07558-y
+Schlegel et al., Nature (2024), https://doi.org/10.1038/s41586-024-07686-5
+Laterality derived from upstream classification and neuron CSVs.
+Code license is MIT, retained in brain/flywire/LICENSE in the source tree.

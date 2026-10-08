@@ -1,0 +1,37 @@
+{
+  "repository": "https://github.com/snedea/flybrain",
+  "commit": "9191824d17871b7851645782d53d23f213ddb938",
+  "codeLicense": "MIT",
+  "dataset": "FlyWire FAFB materialization v783, upstream filtered binary",
+  "dataLicense": "CC-BY-4.0",
+  "neurons": 139255,
+  "edges": 2698236,
+  "kernelSha256": "b99a6932e549968b63449aab4630a9462c5d6606355cd56021f13a5445637b51",
+  "connectomeSha256": "fbf8d440ca1207c7573e1acdd2366f9d0beb9b533c1710f21681264f81b1cc49",
+  "metadataSha256": "a0d04cc964e23ebba476a9298bafe04387957c0cbbe2cb5edea5ecfcb2c47902",
+  "lateralitySha256": "a25bef7b945fd378070705aa43def20189c0c8c927782bd0834a94964841b139",
+  "parameters": {
+    "threshold": 0.1,
+    "leakRate": 0.95,
+    "refractoryPeriod": 3,
+    "weightScale": 0.15,
+    "targetTicksPerSecond": 10
+  },
+  "motorReadout": {
+    "version": 3,
+    "modelFile": "motor-readout.json",
+    "modelSha256": "87103d30af671bac85b92a4132f386eb930afcd701283ef802c7df19008021ab",
+    "featureCount": 38,
+    "calibrationSamples": 184,
+    "featureSmoothing": 0.1,
+    "motorSmoothing": 0.25,
+    "speedBase": 0.2,
+    "odorSpeedGain": 0.35,
+    "odorSteeringGain": 6,
+    "obstacleSteeringGain": 1.5,
+    "maximumSteering": 0.65,
+    "feedingPotentialGain": 400,
+    "tasteTraceDecay": 0.85,
+    "feedSmoothing": 0.15
+  }
+}
