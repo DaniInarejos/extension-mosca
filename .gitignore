@@ -4,3 +4,8 @@ test-results/
 public/brain/flywire-worker.js
 .env
 *.log
+*.pem
+*.key
+*.p12
+*.pfx
+*.crx

@@ -6,6 +6,7 @@ import type { ExtensionConfig, ExtensionMessage, FlySnapshot, RunnerStatus } fro
 import { restingPose } from '../simulation/behavior/index';
 import { DEFAULT_APPEARANCE } from '../simulation/protocol/appearance';
 import { VolunteerBrains } from '../volunteer';
+import type { DeviceSimulationTicketResponse } from '../api/public-contract';
 
 const SEND_INTERVAL_MS = 750;
 const FRAME_INTERVAL_MS = 1000 / 30;
@@ -92,10 +93,9 @@ class MoskaRunner {
       method: 'POST',
       headers: { Authorization: `Bearer ${config.token}` },
     });
-    const result = (await response.json().catch(() => ({}))) as {
-      ticket?: string;
-      error?: string;
-    };
+    const result = (await response.json().catch(() => ({}))) as Partial<
+      DeviceSimulationTicketResponse & { error: string }
+    >;
     if (!response.ok || !result.ticket)
       throw new Error(result.error ?? `El servidor respondió ${response.status}.`);
     return result.ticket;

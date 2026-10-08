@@ -1,0 +1,33 @@
+{
+  "project": "moscas.lol",
+  "verifiedAt": "2026-10-08",
+  "verifiedCommit": "b2103b92c30259db775942597af14955dd4a9c81",
+  "strategy": "copied-for-v0.1",
+  "copies": [
+    {
+      "source": "packages/protocol",
+      "destination": "src/simulation/protocol",
+      "note": "Public client protocol subset; privileged royal types are excluded."
+    },
+    {
+      "source": "apps/client/src/volunteer.ts",
+      "destination": "src/volunteer.ts"
+    },
+    {
+      "source": "apps/client/src/runtime/volunteer-capacity.ts",
+      "destination": "src/runtime/volunteer-capacity.ts"
+    },
+    {
+      "source": "apps/client/src/ui/fly-portrait.ts",
+      "destination": "popup.html",
+      "note": "Markup adapted for live body poses."
+    }
+  ],
+  "excluded": [
+    "credentials and real tokens",
+    "deployment and database configuration",
+    "session internals",
+    "administrative and royal control contracts",
+    "server persistence models"
+  ]
+}

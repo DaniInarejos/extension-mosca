@@ -5,7 +5,6 @@ import type { UserRole } from './user';
 import { FLY_COLOR_IDS } from './appearance';
 export * from './appearance';
 export * from './presence';
-export * from './royal';
 export * from './user';
 export const flyAppearanceSchema = z
   .object({

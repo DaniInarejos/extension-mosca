@@ -23,9 +23,11 @@ Después, abre `chrome://extensions`, activa el modo desarrollador y carga `dist
 
 El servidor de Moskas debe implementar `POST /api/device/simulation-ticket` y aceptar el ticket de un solo uso en `/ws/device`.
 
+La referencia pública de endpoints, autenticación, mensajes WebSocket y tipados disponibles está en [`docs/MOSCAS_PUBLIC_CONTEXT.md`](docs/MOSCAS_PUBLIC_CONTEXT.md).
+
 ## Código copiado
 
-La simulación, el adaptador FlyWire y los assets se copiaron de Moskas en el commit `eefebcbd7b0b5d0b14ce2749916db54ec5787e6d`. Para la 0.1 se mantienen como una instantánea local, sin paquetes compartidos.
+La simulación, el adaptador FlyWire y los assets se copiaron inicialmente de Moskas en el commit `eefebcbd7b0b5d0b14ce2749916db54ec5787e6d`. El protocolo público y los cerebros voluntarios se comprobaron después contra `b2103b92c30259db775942597af14955dd4a9c81`. Para la 0.1 se mantienen como una instantánea local, sin paquetes compartidos; [`docs/upstream-snapshot.json`](docs/upstream-snapshot.json) registra la procedencia exacta.
 
 ## Seguridad
 
@@ -33,6 +35,7 @@ La simulación, el adaptador FlyWire y los assets se copiaron de Moskas en el co
 - El token se guarda en `chrome.storage.local`, no se sincroniza entre navegadores.
 - No hay content scripts ni permiso para leer páginas visitadas.
 - El token puede revocarse desde la cuenta de Moskas.
+- `npm run audit:public` impide versionar claves privadas, paquetes firmados, tokens reales o URIs de MongoDB con credenciales.
 
 ## Licencias y atribución
 
