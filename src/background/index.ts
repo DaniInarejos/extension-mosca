@@ -8,6 +8,7 @@ import {
 
 const OFFSCREEN_PATH = 'offscreen.html';
 let creating: Promise<void> | undefined;
+let resuming: Promise<void> | undefined;
 
 async function config(): Promise<ExtensionConfig> {
   const saved = await chrome.storage.local.get('config');
@@ -101,9 +102,18 @@ chrome.runtime.onMessage.addListener((message: ExtensionMessage, sender, sendRes
 
 async function resume() {
   const saved = await config();
-  if (saved.enabled && saved.token) await start(saved);
+  if (!saved.enabled || !saved.token || (await hasOffscreen())) return;
+  await start(saved);
 }
 
-chrome.runtime.onStartup.addListener(() => void resume());
-chrome.runtime.onInstalled.addListener(() => void resume());
-void resume();
+function resumeOnce() {
+  if (!resuming)
+    resuming = resume().finally(() => {
+      resuming = undefined;
+    });
+  return resuming;
+}
+
+chrome.runtime.onStartup.addListener(() => void resumeOnce());
+chrome.runtime.onInstalled.addListener(() => void resumeOnce());
+void resumeOnce();

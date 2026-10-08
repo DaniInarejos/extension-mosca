@@ -8,6 +8,8 @@ La versión 0.1 prioriza validar el runner en Chrome. Usa un token de dispositiv
 
 Al abrir el icono de la extensión durante una sesión activa, el popup muestra una representación animada de la mosca con sus colores de adopción, nombre, acción corporal actual, estado y energía. El movimiento se deriva de la postura que ya produce la simulación y respeta `prefers-reduced-motion`.
 
+Tras introducir el token y pulsar **Iniciar cerebro** una vez, la extensión guarda la activación en este navegador. El popup puede cerrarse: el cerebro continúa en el documento offscreen, se reconecta con espera progresiva si se corta la red y vuelve a arrancar automáticamente al abrir Chrome. **Detener** desactiva también los siguientes arranques automáticos.
+
 ## Desarrollo
 
 ```bash

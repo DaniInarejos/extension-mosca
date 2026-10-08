@@ -25,8 +25,8 @@ class MoskaRunner {
   private pendingAction?: 'FEED' | 'DRINK';
   private generation = 0;
 
-  async start(config: ExtensionConfig) {
-    this.stop(false);
+  async start(config: ExtensionConfig, resetReconnect = true) {
+    this.stop(false, resetReconnect);
     this.config = config;
     const generation = ++this.generation;
     await this.report('connecting', 'Solicitando acceso al servidor…');
@@ -41,7 +41,7 @@ class MoskaRunner {
     }
   }
 
-  stop(report = true) {
+  stop(report = true, resetReconnect = true) {
     this.generation++;
     window.clearInterval(this.frameTimer);
     window.clearTimeout(this.reconnectTimer);
@@ -54,7 +54,7 @@ class MoskaRunner {
     this.behavior = undefined;
     this.world = undefined;
     this.fly = undefined;
-    this.reconnectAttempt = 0;
+    if (resetReconnect) this.reconnectAttempt = 0;
     if (report) void this.report('idle', 'El cerebro está detenido.');
   }
 
@@ -222,7 +222,7 @@ class MoskaRunner {
     const delay = Math.min(30_000, 1000 * 2 ** this.reconnectAttempt++);
     this.reconnectTimer = window.setTimeout(() => {
       this.reconnectTimer = undefined;
-      if (this.config) void this.start(this.config);
+      if (this.config) void this.start(this.config, false);
     }, delay);
   }
 
