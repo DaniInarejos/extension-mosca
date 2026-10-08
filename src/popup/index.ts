@@ -19,6 +19,7 @@ const connectionNames: Record<RunnerStatus['state'], string> = {
   connecting: 'Conectando',
   loading: 'Cargando cerebro',
   online: 'En línea',
+  paused: 'Control desde la web',
   error: 'Error',
 };
 

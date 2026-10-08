@@ -6,10 +6,11 @@ import type { ExtensionConfig, ExtensionMessage, FlySnapshot, RunnerStatus } fro
 import { restingPose } from '../simulation/behavior/index';
 import { DEFAULT_APPEARANCE } from '../simulation/protocol/appearance';
 import { VolunteerBrains } from '../volunteer';
-import type { DeviceSimulationTicketResponse } from '../api/public-contract';
+import type { DeviceSimulationTicketResponse, DeviceStateResponse } from '../api/public-contract';
 
 const SEND_INTERVAL_MS = 750;
 const FRAME_INTERVAL_MS = 1000 / 30;
+const CONTROL_CHECK_INTERVAL_MS = 5_000;
 
 class MoskaRunner {
   private config?: ExtensionConfig;
@@ -21,6 +22,7 @@ class MoskaRunner {
   private fly?: FlyState;
   private frameTimer?: number;
   private reconnectTimer?: number;
+  private controlCheckTimer?: number;
   private reconnectAttempt = 0;
   private lastFrame = 0;
   private lastSend = 0;
@@ -48,8 +50,10 @@ class MoskaRunner {
     this.generation++;
     window.clearInterval(this.frameTimer);
     window.clearTimeout(this.reconnectTimer);
+    window.clearTimeout(this.controlCheckTimer);
     this.frameTimer = undefined;
     this.reconnectTimer = undefined;
+    this.controlCheckTimer = undefined;
     this.socket?.close(1000, 'Extensión detenida');
     this.socket = undefined;
     this.brain?.dispose();
@@ -129,7 +133,14 @@ class MoskaRunner {
       this.volunteers = undefined;
       window.clearInterval(this.frameTimer);
       this.frameTimer = undefined;
-      if (this.config && event.code !== 1000) {
+      if (this.config && (event.code === 4001 || event.code === 4002)) {
+        const detail =
+          event.code === 4002
+            ? 'La web de moscas.lol está controlando tu mosca. La extensión retomará el cerebro al salir.'
+            : 'Otra sesión está controlando tu mosca. La extensión esperará hasta que quede libre.';
+        void this.report('paused', detail, this.fly?.name);
+        this.scheduleControlCheck();
+      } else if (this.config && event.code !== 1000) {
         void this.report('connecting', 'Conexión interrumpida; reintentando…');
         this.scheduleReconnect();
       }
@@ -238,6 +249,41 @@ class MoskaRunner {
       this.reconnectTimer = undefined;
       if (this.config) void this.start(this.config, false);
     }, delay);
+  }
+
+  private scheduleControlCheck() {
+    if (!this.config || this.controlCheckTimer) return;
+    const generation = this.generation;
+    this.controlCheckTimer = window.setTimeout(() => {
+      this.controlCheckTimer = undefined;
+      void this.checkControlAvailability(generation);
+    }, CONTROL_CHECK_INTERVAL_MS);
+  }
+
+  private async checkControlAvailability(generation: number) {
+    const config = this.config;
+    if (!config || generation !== this.generation) return;
+    try {
+      const response = await fetch(`${config.serverUrl}/api/device/state`, {
+        headers: { Authorization: `Bearer ${config.token}` },
+      });
+      const result = (await response.json().catch(() => ({}))) as Partial<
+        DeviceStateResponse & { error: string }
+      >;
+      if (generation !== this.generation) return;
+      if (!response.ok || !result.fly) {
+        await this.report('error', result.error ?? `El servidor respondió ${response.status}.`);
+        this.scheduleReconnect();
+        return;
+      }
+      if (result.fly.connected) {
+        this.scheduleControlCheck();
+        return;
+      }
+      void this.start(config, false);
+    } catch {
+      if (generation === this.generation) this.scheduleControlCheck();
+    }
   }
 
   private async report(state: RunnerStatus['state'], detail: string, flyName?: string) {

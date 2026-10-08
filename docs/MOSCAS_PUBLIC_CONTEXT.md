@@ -23,6 +23,8 @@ La extensión usa exclusivamente un token revocable con prefijo `fly_device_`. E
 
 La extensión nunca solicita email o contraseña, no lee la cookie de sesión de la web y no guarda tickets WebSocket.
 
+La conexión web tiene prioridad. Si existe un WebSocket de navegador para la misma propietaria, `/ws/device` se cierra con el código `4002`. La extensión libera los cerebros locales, muestra el estado de control cedido y consulta `GET /api/device/state` cada cinco segundos. Solo solicita un ticket nuevo cuando `fly.connected` vuelve a ser `false`.
+
 ## Endpoints disponibles
 
 ### Públicos, sin autenticación

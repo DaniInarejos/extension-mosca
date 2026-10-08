@@ -320,6 +320,9 @@ header p,
 .status[data-kind="online"]::before {
   background: #8ca72b;
 }
+.status[data-kind="paused"]::before {
+  background: #c49132;
+}
 .status[data-kind="error"]::before {
   background: #c66051;
 }

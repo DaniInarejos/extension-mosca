@@ -1,5 +1,5 @@
 export type RunnerStatus = {
-  state: 'idle' | 'connecting' | 'loading' | 'online' | 'error';
+  state: 'idle' | 'connecting' | 'loading' | 'online' | 'paused' | 'error';
   detail: string;
   flyName?: string;
   updatedAt: number;
