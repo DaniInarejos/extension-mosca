@@ -70,14 +70,23 @@ header p,
 .fly-stage {
   height: 174px;
   background:
-    radial-gradient(ellipse at 20% 20%, rgb(255 255 255 / 40%) 0 2px, transparent 3px),
-    radial-gradient(ellipse at 80% 36%, rgb(255 255 255 / 35%) 0 3px, transparent 4px);
+    radial-gradient(
+      ellipse at 20% 20%,
+      rgb(255 255 255 / 40%) 0 2px,
+      transparent 3px
+    ),
+    radial-gradient(
+      ellipse at 80% 36%,
+      rgb(255 255 255 / 35%) 0 3px,
+      transparent 4px
+    );
 }
 
 .fly-avatar {
   width: 100%;
   height: 100%;
   overflow: visible;
+  color: color-mix(in oklch, var(--body-color) 68%, #172b20);
   --body-color: #414c38;
   --eye-color: #a36245;
   --wing-color: #e6ede0;
@@ -89,7 +98,8 @@ header p,
 }
 
 .fly-shadow {
-  fill: rgb(38 44 26 / 18%);
+  fill: #0c2117;
+  opacity: 0.16;
   transform-origin: center;
 }
 .fly-motion,
@@ -110,41 +120,50 @@ header p,
   transform-origin: center;
   transform: rotate(var(--fly-roll)) skewY(var(--fly-pitch));
 }
-.thorax,
+.fly-body,
 .head-shell {
   fill: var(--body-color);
+  stroke: #172b20;
+  stroke-width: 1.5;
 }
 .abdomen {
-  fill: color-mix(in oklch, var(--body-color) 76%, #20251d);
+  fill: var(--body-color);
 }
 
 .abdomen-band {
   fill: none;
-  stroke: color-mix(in oklch, var(--body-color) 58%, white);
-  stroke-width: 4;
-  stroke-linecap: round;
-  opacity: 0.68;
+  stroke: white;
+  stroke-width: 1.5;
+  opacity: 0.3;
 }
 
 .eye {
   fill: var(--eye-color);
+  stroke: #172b20;
+  stroke-width: 1;
   filter: drop-shadow(0 1px 1px rgb(0 0 0 / 20%));
 }
 
 .wing {
   fill: var(--wing-color);
-  opacity: 0.62;
-  stroke: rgb(66 76 56 / 20%);
-  stroke-width: 1;
+  opacity: 0.72;
+  stroke: #d7dfca;
+  stroke-width: 1.2;
   transform-origin: center bottom;
 }
 
-.legs,
-.antenna,
+.fly-portrait-legs,
+.antenna {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 3;
+  stroke-linecap: round;
+}
+
 .proboscis {
   fill: none;
-  stroke: color-mix(in oklch, var(--body-color) 60%, #161b14);
-  stroke-width: 5;
+  stroke: #806343;
+  stroke-width: 3;
   stroke-linecap: round;
 }
 
@@ -163,54 +182,58 @@ header p,
   transform: scaleY(calc(0.35 + var(--proboscis) * 0.65));
 }
 
-.fly-avatar[data-action='IDLE'] .fly-motion {
+.fly-avatar[data-action="IDLE"] .fly-motion {
   animation: idle-breathe 2.4s cubic-bezier(0.45, 0, 0.55, 1) infinite alternate;
 }
-.fly-avatar[data-action='WALK'] .fly-motion {
+.fly-avatar[data-action="WALK"] .fly-motion {
   animation: walk-bob 520ms cubic-bezier(0.45, 0, 0.55, 1) infinite;
 }
-.fly-avatar[data-action='WALK'] .leg:nth-child(odd) {
+.fly-avatar[data-action="WALK"] .leg:nth-child(odd) {
   animation: leg-step 520ms cubic-bezier(0.45, 0, 0.55, 1) infinite alternate;
 }
-.fly-avatar[data-action='WALK'] .leg:nth-child(even) {
-  animation: leg-step 520ms -260ms cubic-bezier(0.45, 0, 0.55, 1) infinite alternate-reverse;
+.fly-avatar[data-action="WALK"] .leg:nth-child(even) {
+  animation: leg-step 520ms -260ms cubic-bezier(0.45, 0, 0.55, 1) infinite
+    alternate-reverse;
 }
-.fly-avatar[data-action='GROOM'] .head {
+.fly-avatar[data-action="GROOM"] .head {
   transform-origin: center bottom;
   animation: groom-head 780ms cubic-bezier(0.45, 0, 0.55, 1) infinite alternate;
 }
-.fly-avatar[data-action='GROOM'] .leg-1,
-.fly-avatar[data-action='GROOM'] .leg-3 {
+.fly-avatar[data-action="GROOM"] .leg-1,
+.fly-avatar[data-action="GROOM"] .leg-4 {
   animation: groom-leg 480ms cubic-bezier(0.45, 0, 0.55, 1) infinite alternate;
 }
-.fly-avatar[data-action='FEED'] .fly-tilt {
+.fly-avatar[data-action="FEED"] .fly-tilt {
   animation: feed-bob 900ms cubic-bezier(0.45, 0, 0.55, 1) infinite alternate;
 }
-.fly-avatar[data-action='ALERT'] .antenna-left {
+.fly-avatar[data-action="ALERT"] .antenna-left {
   animation: antenna-alert 240ms cubic-bezier(0.4, 0, 0.2, 1) infinite alternate;
 }
-.fly-avatar[data-action='ALERT'] .antenna-right {
-  animation: antenna-alert 240ms -120ms cubic-bezier(0.4, 0, 0.2, 1) infinite alternate-reverse;
+.fly-avatar[data-action="ALERT"] .antenna-right {
+  animation: antenna-alert 240ms -120ms cubic-bezier(0.4, 0, 0.2, 1) infinite
+    alternate-reverse;
 }
 
-.fly-avatar[data-action='TAKEOFF'] .fly-motion,
-.fly-avatar[data-action='LAND'] .fly-motion,
-.fly-avatar[data-action='FLIGHT'] .fly-motion {
-  animation: flight-hover 900ms cubic-bezier(0.45, 0, 0.55, 1) infinite alternate;
+.fly-avatar[data-action="TAKEOFF"] .fly-motion,
+.fly-avatar[data-action="LAND"] .fly-motion,
+.fly-avatar[data-action="FLIGHT"] .fly-motion {
+  animation: flight-hover 900ms cubic-bezier(0.45, 0, 0.55, 1) infinite
+    alternate;
 }
 
-.fly-avatar[data-action='TAKEOFF'] .wing-left,
-.fly-avatar[data-action='TAKEOFF'] .wing-right,
-.fly-avatar[data-action='FLIGHT'] .wing-left,
-.fly-avatar[data-action='FLIGHT'] .wing-right,
-.fly-avatar[data-action='LAND'] .wing-left,
-.fly-avatar[data-action='LAND'] .wing-right {
+.fly-avatar[data-action="TAKEOFF"] .wing-left,
+.fly-avatar[data-action="TAKEOFF"] .wing-right,
+.fly-avatar[data-action="FLIGHT"] .wing-left,
+.fly-avatar[data-action="FLIGHT"] .wing-right,
+.fly-avatar[data-action="LAND"] .wing-left,
+.fly-avatar[data-action="LAND"] .wing-right {
   animation: wing-buzz var(--wing-duration) linear infinite alternate;
 }
 
-.fly-avatar[data-action='FLIGHT'] .fly-shadow,
-.fly-avatar[data-flight='airborne'] .fly-shadow {
-  animation: shadow-hover 900ms cubic-bezier(0.45, 0, 0.55, 1) infinite alternate;
+.fly-avatar[data-action="FLIGHT"] .fly-shadow,
+.fly-avatar[data-flight="airborne"] .fly-shadow {
+  animation: shadow-hover 900ms cubic-bezier(0.45, 0, 0.55, 1) infinite
+    alternate;
 }
 
 .fly-summary {
@@ -292,12 +315,12 @@ header p,
   margin-right: 7px;
   border-radius: 50%;
   background: #aaa69a;
-  content: '';
+  content: "";
 }
-.status[data-kind='online']::before {
+.status[data-kind="online"]::before {
   background: #8ca72b;
 }
-.status[data-kind='error']::before {
+.status[data-kind="error"]::before {
   background: #c66051;
 }
 

@@ -27,35 +27,74 @@
           <svg
             id="fly-avatar"
             class="fly-avatar"
-            viewBox="0 0 240 170"
+            viewBox="0 0 220 140"
             role="img"
             aria-label="Tu mosca"
           >
-            <ellipse class="fly-shadow" cx="120" cy="146" rx="46" ry="8" />
+            <!-- Copia adaptada del retrato original de apps/client/src/ui/fly-portrait.ts. -->
+            <ellipse class="fly-shadow" cx="110" cy="120" rx="43" ry="7" />
             <g class="fly-motion">
               <g class="fly-tilt">
-                <g class="wing wing-left">
-                  <ellipse cx="91" cy="67" rx="38" ry="14" />
+                <g class="fly-portrait-legs legs">
+                  <path class="leg leg-1" d="M97 66 74 49 61 50" />
+                  <path class="leg leg-2" d="M98 79 67 76 54 85" />
+                  <path class="leg leg-3" d="M98 91 74 102 67 118" />
+                  <path class="leg leg-4" d="M123 66 146 49 159 50" />
+                  <path class="leg leg-5" d="M122 79 153 76 166 85" />
+                  <path class="leg leg-6" d="M122 91 146 102 153 118" />
                 </g>
-                <g class="wing wing-right">
-                  <ellipse cx="149" cy="67" rx="38" ry="14" />
+                <g class="fly-body">
+                  <ellipse class="abdomen" cx="110" cy="94" rx="16" ry="25" />
+                  <path class="abdomen-band" d="M96 87h28m-29 9h30m-25 9h20" />
+                  <ellipse class="thorax" cx="110" cy="67" rx="17" ry="19" />
                 </g>
-                <g class="legs">
-                  <path class="leg leg-1" d="M105 104 78 128 62 143" />
-                  <path class="leg leg-2" d="M110 108 96 139 89 151" />
-                  <path class="leg leg-3" d="M135 104 162 128 178 143" />
-                  <path class="leg leg-4" d="M130 108 144 139 151 151" />
+                <g class="wings">
+                  <g class="wing wing-left">
+                    <ellipse
+                      cx="81"
+                      cy="90"
+                      rx="16"
+                      ry="34"
+                      transform="rotate(30 81 90)"
+                    />
+                  </g>
+                  <g class="wing wing-right">
+                    <ellipse
+                      cx="139"
+                      cy="90"
+                      rx="16"
+                      ry="34"
+                      transform="rotate(-30 139 90)"
+                    />
+                  </g>
                 </g>
-                <ellipse class="abdomen" cx="120" cy="105" rx="24" ry="38" />
-                <path class="abdomen-band" d="M99 98 Q120 108 141 98 M98 110 Q120 120 142 110" />
-                <ellipse class="thorax" cx="120" cy="78" rx="27" ry="29" />
                 <g class="head">
-                  <circle class="head-shell" cx="120" cy="49" r="21" />
-                  <ellipse class="eye eye-left" cx="108" cy="48" rx="9" ry="12" />
-                  <ellipse class="eye eye-right" cx="132" cy="48" rx="9" ry="12" />
-                  <path class="antenna antenna-left" d="M113 33 Q101 19 94 24" />
-                  <path class="antenna antenna-right" d="M127 33 Q139 19 146 24" />
-                  <path class="proboscis" d="M120 65 Q120 76 116 83" />
+                  <ellipse
+                    class="head-shell"
+                    cx="110"
+                    cy="45"
+                    rx="14"
+                    ry="13"
+                  />
+                  <ellipse
+                    class="eye eye-left"
+                    cx="100"
+                    cy="43"
+                    rx="7"
+                    ry="10"
+                    transform="rotate(-15 100 43)"
+                  />
+                  <ellipse
+                    class="eye eye-right"
+                    cx="120"
+                    cy="43"
+                    rx="7"
+                    ry="10"
+                    transform="rotate(15 120 43)"
+                  />
+                  <path class="antenna antenna-left" d="M103 37 98 23" />
+                  <path class="antenna antenna-right" d="M117 37 122 23" />
+                  <path class="proboscis" d="M110 56 Q110 67 106 74" />
                 </g>
               </g>
             </g>
@@ -87,7 +126,9 @@
       <details id="connection" open>
         <summary>Conexión</summary>
         <div class="connection-form">
-          <label>Servidor<input id="server" type="url" value="https://moscas.lol" /></label>
+          <label
+            >Servidor<input id="server" type="url" value="https://moscas.lol"
+          /></label>
           <label
             >Token de dispositivo<input
               id="token"
@@ -95,7 +136,9 @@
               autocomplete="off"
               placeholder="fly_device_…"
           /></label>
-          <p class="hint">El token queda guardado únicamente en este navegador.</p>
+          <p class="hint">
+            El token queda guardado únicamente en este navegador.
+          </p>
           <div class="actions">
             <button id="start" type="button">Iniciar cerebro</button>
             <button id="stop" class="secondary" type="button">Detener</button>
