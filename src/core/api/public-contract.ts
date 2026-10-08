@@ -80,6 +80,21 @@ export interface DeviceStateResponse {
   };
 }
 
+/** Read-only ownership probe; does not renew companion presence. */
+export interface DeviceControlResponse {
+  protocol: 1;
+  fly: { connected: boolean };
+}
+
+export interface DeviceDisplayResponse {
+  protocol: 1;
+  serverTime: number;
+  fly: Pick<
+    DeviceStateResponse['fly'],
+    'flyId' | 'name' | 'appearance' | 'energy' | 'status' | 'action' | 'position'
+  >;
+}
+
 export interface LinkedDevice {
   id: string;
   label: string;

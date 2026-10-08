@@ -65,9 +65,9 @@ describe('ciclo de vida del núcleo sin Chrome ni DOM', () => {
     h.sessions[0].events.onClose(code);
     expect(h.statuses.at(-1)?.state).toBe('paused');
     expect(h.brainFactory.mock.results[0].value.dispose).toHaveBeenCalledOnce();
-    await vi.advanceTimersByTimeAsync(5_000);
+    await vi.advanceTimersByTimeAsync(15_000);
     expect(h.device.ticket).toHaveBeenCalledTimes(1);
-    await vi.advanceTimersByTimeAsync(5_000);
+    await vi.advanceTimersByTimeAsync(15_000);
     expect(h.device.ticket).toHaveBeenCalledTimes(2);
     expect(h.sessions).toHaveLength(2);
     h.runner.stop();
@@ -154,9 +154,9 @@ describe('ciclo de vida del núcleo sin Chrome ni DOM', () => {
       .mockRejectedValueOnce(new DeviceResponseError('Token revocado'));
     await h.runner.start(config);
     h.sessions[0].events.onClose(4002);
-    await vi.advanceTimersByTimeAsync(5_000);
+    await vi.advanceTimersByTimeAsync(15_000);
     expect(h.statuses.at(-1)?.state).toBe('paused');
-    await vi.advanceTimersByTimeAsync(5_000);
+    await vi.advanceTimersByTimeAsync(15_000);
     expect(h.statuses.at(-1)).toMatchObject({ state: 'error', detail: 'Token revocado' });
     await vi.advanceTimersByTimeAsync(1_000);
     expect(h.device.ticket).toHaveBeenCalledTimes(2);
@@ -252,7 +252,7 @@ describe('ciclo de vida del núcleo sin Chrome ni DOM', () => {
     });
     await h.runner.start(config);
     h.sessions[0].events.onClose(4002);
-    await vi.advanceTimersByTimeAsync(5_000);
+    await vi.advanceTimersByTimeAsync(15_000);
     h.runner.stop();
     expect(signal.aborted).toBe(true);
     await vi.advanceTimersByTimeAsync(60_000);

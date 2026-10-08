@@ -6,7 +6,7 @@ Esta es la referencia de integración para la extensión 0.1. Describe únicamen
 
 - Origen canónico: `https://moscas.lol`.
 - API HTTP: `/api/*`.
-- Jardín WebSocket para la extensión: `/ws/device?ticket=<ticket efímero>`.
+- Jardín WebSocket para la extensión: `/ws/device?ticket=<ticket efímero>&protocol=3`.
 - JSON es el formato de las peticiones HTTP y los mensajes WebSocket.
 - Los errores HTTP tienen la forma `{ "error": string }`.
 
@@ -23,7 +23,11 @@ La extensión usa exclusivamente un token revocable con prefijo `fly_device_`. E
 
 La extensión nunca solicita email o contraseña, no lee la cookie de sesión de la web y no guarda tickets WebSocket.
 
-La conexión web tiene prioridad. Si existe un WebSocket de navegador para la misma propietaria, `/ws/device` se cierra con el código `4002`. La extensión libera los cerebros locales, muestra el estado de control cedido y consulta `GET /api/device/state` cada cinco segundos. Solo solicita un ticket nuevo cuando `fly.connected` vuelve a ser `false`.
+La conexión web tiene prioridad. Si existe un WebSocket de navegador para la misma propietaria, `/ws/device` se cierra con el código `4002`. La extensión libera los cerebros locales, muestra el estado de control cedido y consulta `GET /api/device/state?view=control` cada 15 segundos. Devuelve `{protocol: 1, fly: {connected: boolean}}` sin renovar presencia ni simular el mundo. Solo solicita un ticket nuevo cuando `fly.connected` vuelve a ser `false`.
+
+El stream v3 añade `WORLD_FRAME` con `sequence`, `delta` compacto y `control` privado. `stream.ts` desempaqueta las posturas y `world-delta.ts` aplica altas, bajas, cambios y campos eliminados. Una secuencia perdida obliga a reconectar. La mosca propia conserva el movimiento local cuando no existe una intervención autoritativa. Los cerebros acogidos reciben necesidades e intenciones por `control`; renovar permisos ya no implica descargar de nuevo sus estados completos. Se siguen admitiendo `WORLD_STATE` y `WORLD_DELTA` de servidores anteriores.
+
+Para pantallas: `GET` o `POST /api/device/state?view=display` devuelve solo `protocol`, `serverTime` y `fly` con `flyId`, `name`, `appearance`, `energy`, `status`, `action` y `position`. El POST mantiene la validación de telemetría y la presencia, pero no devuelve una copia de esa telemetría. Omitir `view` mantiene la respuesta completa anterior.
 
 ## Endpoints disponibles
 

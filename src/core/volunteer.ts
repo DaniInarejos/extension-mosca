@@ -1,4 +1,9 @@
-import type { SimulationLease, VolunteerState, WorldState } from './simulation/protocol/index';
+import type {
+  FlyStatePatch,
+  SimulationLease,
+  VolunteerState,
+  WorldState,
+} from './simulation/protocol/index';
 import { MotorBehavior } from './simulation/behavior/index';
 import { advanceLocalFly } from './simulation/physics/local-step';
 import type { Brain, BrainFactory, Clock } from './ports';
@@ -104,10 +109,24 @@ export class VolunteerBrains {
     this.runtimes.delete(leaseId);
   }
 
+  updateControl(patches: FlyStatePatch[]) {
+    for (const patch of patches) {
+      for (const runtime of this.runtimes.values()) {
+        if (runtime.fly.flyId !== patch.flyId) continue;
+        Object.assign(runtime.fly, structuredClone(patch.set));
+        for (const key of patch.unset ?? [])
+          delete (runtime.fly as unknown as Record<string, unknown>)[key];
+      }
+    }
+  }
+
   frame(now: number, elapsed: number, world: WorldState) {
     if (!this.enabled) return;
     if (now - this.lastHeartbeat >= HEARTBEAT_INTERVAL_MS) {
-      this.send({ type: 'VOLUNTEER_CAPACITY', capacity: this.announcedCapacity });
+      this.send({
+        type: 'VOLUNTEER_CAPACITY',
+        capacity: this.announcedCapacity,
+      });
       this.lastHeartbeat = now;
     }
     for (const runtime of this.runtimes.values()) {

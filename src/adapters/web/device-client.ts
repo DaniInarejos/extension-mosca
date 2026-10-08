@@ -1,4 +1,4 @@
-import type { DeviceSimulationTicketResponse, DeviceStateResponse } from '../../core/api/public-contract';
+import type { DeviceSimulationTicketResponse, DeviceControlResponse } from '../../core/api/public-contract';
 import type { DeviceClient } from '../../core/ports';
 import type { ServerMessage } from '../../core/simulation/protocol/index';
 import { DeviceResponseError } from '../../core/api/device-error';
@@ -19,16 +19,18 @@ export const webDeviceClient: DeviceClient = {
     const url = new URL(config.serverUrl);
     url.protocol = url.protocol === 'https:' ? 'wss:' : 'ws:';
     url.pathname = '/ws/device';
-    url.search = `ticket=${encodeURIComponent(ticket)}`;
+    url.search = `ticket=${encodeURIComponent(ticket)}&protocol=3`;
     const socket = new WebSocket(url);
     socket.onopen = () => events.onOpen();
     socket.onmessage = (event) => {
       try {
         void events.onMessage(JSON.parse(event.data) as ServerMessage).catch((error: unknown) => {
           events.onError(String(error));
+          socket.close(4000, 'Resincronizar el jardín');
         });
       } catch (error) {
         events.onError(`Mensaje del servidor no válido: ${String(error)}`);
+        socket.close(4000, 'Resincronizar el jardín');
       }
     };
     // El cierre del socket activa la reconexión; evita un segundo camino de reintentos.
@@ -36,13 +38,20 @@ export const webDeviceClient: DeviceClient = {
     socket.onclose = (event) => events.onClose(event.code);
     return {
       isOpen: () => socket.readyState === WebSocket.OPEN,
-      send: (message) => socket.send(JSON.stringify(message)),
+      send: (message) => {
+        if (socket.readyState !== WebSocket.OPEN) return;
+        if (socket.bufferedAmount >= 512_000) {
+          socket.close(4000, 'Resincronizar el jardín');
+          return;
+        }
+        socket.send(JSON.stringify(message));
+      },
       close: () => socket.close(1000, 'Cliente detenido'),
     };
   },
   async isFlyConnected(config, signal) {
-    const { response, data: result } = await requestJson<Partial<DeviceStateResponse & { error: string }>>(
-      `${config.serverUrl}/api/device/state`,
+    const { response, data: result } = await requestJson<Partial<DeviceControlResponse & { error: string }>>(
+      `${config.serverUrl}/api/device/state?view=control`,
       { headers: { Authorization: `Bearer ${config.token}` } },
       signal,
     );
