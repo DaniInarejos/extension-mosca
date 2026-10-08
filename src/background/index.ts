@@ -11,12 +11,26 @@ let creating: Promise<void> | undefined;
 
 async function config(): Promise<ExtensionConfig> {
   const saved = await chrome.storage.local.get('config');
-  return { ...DEFAULT_CONFIG, ...(saved.config as Partial<ExtensionConfig> | undefined) };
+  return {
+    ...DEFAULT_CONFIG,
+    ...(saved.config as Partial<ExtensionConfig> | undefined),
+  };
 }
 
 async function status(): Promise<RunnerStatus> {
   const saved = await chrome.storage.local.get('status');
   return (saved.status as RunnerStatus | undefined) ?? IDLE_STATUS;
+}
+
+async function flySnapshot() {
+  if (!(await hasOffscreen())) return undefined;
+  try {
+    return await chrome.runtime.sendMessage({
+      type: 'RUNNER_SNAPSHOT',
+    } satisfies ExtensionMessage);
+  } catch {
+    return undefined;
+  }
 }
 
 async function hasOffscreen() {
@@ -47,7 +61,10 @@ async function ensureOffscreen() {
 async function start(next: ExtensionConfig) {
   await chrome.storage.local.set({ config: next });
   await ensureOffscreen();
-  await chrome.runtime.sendMessage({ type: 'RUNNER_START', config: next } satisfies ExtensionMessage);
+  await chrome.runtime.sendMessage({
+    type: 'RUNNER_START',
+    config: next,
+  } satisfies ExtensionMessage);
 }
 
 chrome.runtime.onMessage.addListener((message: ExtensionMessage, sender, sendResponse) => {
@@ -56,7 +73,12 @@ chrome.runtime.onMessage.addListener((message: ExtensionMessage, sender, sendRes
     return;
   }
   void (async () => {
-    if (message.type === 'GET_STATE') return { config: await config(), status: await status() };
+    if (message.type === 'GET_STATE')
+      return {
+        config: await config(),
+        status: await status(),
+        fly: await flySnapshot(),
+      };
     if (message.type === 'START') {
       const next = { ...message.config, enabled: true };
       await start(next);
@@ -66,7 +88,9 @@ chrome.runtime.onMessage.addListener((message: ExtensionMessage, sender, sendRes
       const next = { ...(await config()), enabled: false };
       await chrome.storage.local.set({ config: next, status: IDLE_STATUS });
       if (await hasOffscreen()) {
-        await chrome.runtime.sendMessage({ type: 'RUNNER_STOP' } satisfies ExtensionMessage);
+        await chrome.runtime.sendMessage({
+          type: 'RUNNER_STOP',
+        } satisfies ExtensionMessage);
         await chrome.offscreen.closeDocument();
       }
       return { ok: true };

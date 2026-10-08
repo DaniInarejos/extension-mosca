@@ -5,6 +5,31 @@ export type RunnerStatus = {
   updatedAt: number;
 };
 
+export type FlySnapshot = {
+  name: string;
+  energy: number;
+  status: string;
+  appearance: {
+    eyes: string;
+    body: string;
+    wings: string;
+  };
+  pose: {
+    behavior: 'WALK' | 'IDLE' | 'GROOM' | 'FEED' | 'ALERT' | 'TAKEOFF' | 'FLIGHT' | 'LAND';
+    flight: 'ground' | 'preparing' | 'airborne' | 'landing';
+    phase: number;
+    intensity: number;
+    groomingTarget: 'legs' | 'head' | 'antennae' | 'wings' | 'abdomen';
+    wings: number;
+    antennaLeft: number;
+    antennaRight: number;
+    proboscis: number;
+    pitch: number;
+    roll: number;
+  };
+  updatedAt: number;
+};
+
 export type ExtensionConfig = {
   enabled: boolean;
   serverUrl: string;
@@ -29,4 +54,5 @@ export type ExtensionMessage =
   | { type: 'STOP' }
   | { type: 'RUNNER_START'; config: ExtensionConfig }
   | { type: 'RUNNER_STOP' }
+  | { type: 'RUNNER_SNAPSHOT' }
   | { type: 'RUNNER_STATUS'; status: RunnerStatus };

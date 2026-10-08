@@ -6,6 +6,8 @@ Extensión experimental de Chrome que ejecuta localmente el cerebro FlyWire de l
 
 La versión 0.1 prioriza validar el runner en Chrome. Usa un token de dispositivo revocable, un documento offscreen y un Web Worker. Mientras esta versión está activa, abrir el jardín con la misma cuenta puede sustituir su conexión.
 
+Al abrir el icono de la extensión durante una sesión activa, el popup muestra una representación animada de la mosca con sus colores de adopción, nombre, acción corporal actual, estado y energía. El movimiento se deriva de la postura que ya produce la simulación y respeta `prefers-reduced-motion`.
+
 ## Desarrollo
 
 ```bash

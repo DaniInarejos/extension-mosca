@@ -8,18 +8,101 @@
   <body>
     <main>
       <header>
-        <span class="mark">M</span>
-        <div><h1>Moskas Brain</h1><p>Extensión experimental 0.1</p></div>
+        <span class="mark" aria-hidden="true">
+          <svg viewBox="0 0 32 32">
+            <ellipse cx="16" cy="18" rx="5" ry="8" />
+            <circle cx="16" cy="10" r="4" />
+            <ellipse cx="9" cy="16" rx="6" ry="3" />
+            <ellipse cx="23" cy="16" rx="6" ry="3" />
+          </svg>
+        </span>
+        <div>
+          <h1>Moskas Brain</h1>
+          <p>Extensión experimental 0.1</p>
+        </div>
       </header>
+
+      <section id="fly-card" class="fly-card" hidden>
+        <div class="fly-stage">
+          <svg
+            id="fly-avatar"
+            class="fly-avatar"
+            viewBox="0 0 240 170"
+            role="img"
+            aria-label="Tu mosca"
+          >
+            <ellipse class="fly-shadow" cx="120" cy="146" rx="46" ry="8" />
+            <g class="fly-motion">
+              <g class="fly-tilt">
+                <g class="wing wing-left">
+                  <ellipse cx="91" cy="67" rx="38" ry="14" />
+                </g>
+                <g class="wing wing-right">
+                  <ellipse cx="149" cy="67" rx="38" ry="14" />
+                </g>
+                <g class="legs">
+                  <path class="leg leg-1" d="M105 104 78 128 62 143" />
+                  <path class="leg leg-2" d="M110 108 96 139 89 151" />
+                  <path class="leg leg-3" d="M135 104 162 128 178 143" />
+                  <path class="leg leg-4" d="M130 108 144 139 151 151" />
+                </g>
+                <ellipse class="abdomen" cx="120" cy="105" rx="24" ry="38" />
+                <path class="abdomen-band" d="M99 98 Q120 108 141 98 M98 110 Q120 120 142 110" />
+                <ellipse class="thorax" cx="120" cy="78" rx="27" ry="29" />
+                <g class="head">
+                  <circle class="head-shell" cx="120" cy="49" r="21" />
+                  <ellipse class="eye eye-left" cx="108" cy="48" rx="9" ry="12" />
+                  <ellipse class="eye eye-right" cx="132" cy="48" rx="9" ry="12" />
+                  <path class="antenna antenna-left" d="M113 33 Q101 19 94 24" />
+                  <path class="antenna antenna-right" d="M127 33 Q139 19 146 24" />
+                  <path class="proboscis" d="M120 65 Q120 76 116 83" />
+                </g>
+              </g>
+            </g>
+          </svg>
+        </div>
+        <div class="fly-summary">
+          <div>
+            <p id="fly-action" class="action-pill">Descansando</p>
+            <h2 id="fly-name">Tu mosca</h2>
+            <p id="fly-status" class="fly-status"></p>
+          </div>
+          <div class="energy-readout">
+            <span>Energía</span><strong id="energy-value">0%</strong>
+          </div>
+        </div>
+        <div
+          class="energy-track"
+          role="meter"
+          aria-label="Energía"
+          aria-valuemin="0"
+          aria-valuemax="100"
+          aria-valuenow="0"
+        >
+          <span id="energy-fill" class="energy-fill"></span>
+        </div>
+      </section>
+
       <div id="status" class="status" data-kind="idle">Detenida</div>
-      <label>Servidor<input id="server" type="url" value="https://moscas.lol" /></label>
-      <label>Token de dispositivo<input id="token" type="password" autocomplete="off" placeholder="fly_device_…" /></label>
-      <p class="hint">El token queda guardado únicamente en este navegador.</p>
-      <div class="actions">
-        <button id="start" type="button">Iniciar cerebro</button>
-        <button id="stop" class="secondary" type="button">Detener</button>
-      </div>
-      <p id="detail" class="detail"></p>
+      <details id="connection" open>
+        <summary>Conexión</summary>
+        <div class="connection-form">
+          <label>Servidor<input id="server" type="url" value="https://moscas.lol" /></label>
+          <label
+            >Token de dispositivo<input
+              id="token"
+              type="password"
+              autocomplete="off"
+              placeholder="fly_device_…"
+          /></label>
+          <p class="hint">El token queda guardado únicamente en este navegador.</p>
+          <div class="actions">
+            <button id="start" type="button">Iniciar cerebro</button>
+            <button id="stop" class="secondary" type="button">Detener</button>
+          </div>
+        </div>
+      </details>
+      <p id="detail" class="detail" aria-live="polite"></p>
     </main>
     <script type="module" src="/src/popup/index.ts"></script>
   </body>

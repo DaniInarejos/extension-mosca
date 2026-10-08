@@ -17,7 +17,14 @@
   },
   "action": {
     "default_title": "Moskas Brain",
-    "default_popup": "popup.html"
+    "default_popup": "popup.html",
+    "default_icon": "moska.ico"
+  },
+  "icons": {
+    "16": "moska.ico",
+    "32": "moska.ico",
+    "48": "moska.ico",
+    "128": "moska.ico"
   },
   "content_security_policy": {
     "extension_pages": "script-src 'self'; object-src 'self'; worker-src 'self'"

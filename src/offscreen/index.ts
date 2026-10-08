@@ -1,12 +1,10 @@
 import { FlyWireAdapter } from '../brain';
 import { MotorBehavior } from '../simulation/behavior/index';
 import { advanceLocalFly } from '../simulation/physics/local-step';
-import type {
-  FlyState,
-  ServerMessage,
-  WorldState,
-} from '../simulation/protocol/index';
-import type { ExtensionConfig, ExtensionMessage, RunnerStatus } from '../shared';
+import type { FlyState, ServerMessage, WorldState } from '../simulation/protocol/index';
+import type { ExtensionConfig, ExtensionMessage, FlySnapshot, RunnerStatus } from '../shared';
+import { restingPose } from '../simulation/behavior/index';
+import { DEFAULT_APPEARANCE } from '../simulation/protocol/appearance';
 
 const SEND_INTERVAL_MS = 750;
 const FRAME_INTERVAL_MS = 1000 / 30;
@@ -60,12 +58,40 @@ class MoskaRunner {
     if (report) void this.report('idle', 'El cerebro está detenido.');
   }
 
+  snapshot(): FlySnapshot | undefined {
+    if (!this.fly) return;
+    const pose = this.fly.body ?? restingPose();
+    return {
+      name: this.fly.name,
+      energy: Math.max(0, Math.min(100, this.fly.energy)),
+      status: this.fly.status,
+      appearance: { ...DEFAULT_APPEARANCE, ...this.fly.appearance },
+      pose: {
+        behavior: pose.behavior,
+        flight: pose.flight,
+        phase: pose.phase,
+        intensity: pose.intensity,
+        groomingTarget: pose.groomingTarget,
+        wings: pose.wings,
+        antennaLeft: pose.antennaLeft,
+        antennaRight: pose.antennaRight,
+        proboscis: pose.proboscis,
+        pitch: pose.pitch,
+        roll: pose.roll,
+      },
+      updatedAt: Date.now(),
+    };
+  }
+
   private async ticket(config: ExtensionConfig) {
     const response = await fetch(`${config.serverUrl}/api/device/simulation-ticket`, {
       method: 'POST',
       headers: { Authorization: `Bearer ${config.token}` },
     });
-    const result = (await response.json().catch(() => ({}))) as { ticket?: string; error?: string };
+    const result = (await response.json().catch(() => ({}))) as {
+      ticket?: string;
+      error?: string;
+    };
     if (!response.ok || !result.ticket)
       throw new Error(result.error ?? `El servidor respondió ${response.status}.`);
     return result.ticket;
@@ -121,7 +147,8 @@ class MoskaRunner {
     }
     if (message.type === 'WORLD_STATE') {
       this.world = message.world;
-      const authoritative = this.fly && message.world.flies.find((fly) => fly.flyId === this.fly!.flyId);
+      const authoritative =
+        this.fly && message.world.flies.find((fly) => fly.flyId === this.fly!.flyId);
       if (authoritative && this.fly) {
         this.fly.energy = authoritative.energy;
         this.fly.needs = structuredClone(authoritative.needs);
@@ -164,7 +191,8 @@ class MoskaRunner {
         (result.sensory.waterTaste ?? 0) > (result.sensory.foodTaste ?? 0) ? 'DRINK' : 'FEED';
       this.lastFeed = now;
     }
-    if (now - this.lastSend < SEND_INTERVAL_MS || this.socket?.readyState !== WebSocket.OPEN) return;
+    if (now - this.lastSend < SEND_INTERVAL_MS || this.socket?.readyState !== WebSocket.OPEN)
+      return;
     this.socket.send(
       JSON.stringify({
         type: 'FLY_STATE',
@@ -177,7 +205,13 @@ class MoskaRunner {
       }),
     );
     if (this.pendingAction) {
-      this.socket.send(JSON.stringify({ type: 'FLY_ACTION', action: this.pendingAction, timestamp: Date.now() }));
+      this.socket.send(
+        JSON.stringify({
+          type: 'FLY_ACTION',
+          action: this.pendingAction,
+          timestamp: Date.now(),
+        }),
+      );
       delete this.pendingAction;
     }
     this.lastSend = now;
@@ -202,7 +236,8 @@ class MoskaRunner {
 
 const runner = new MoskaRunner();
 
-chrome.runtime.onMessage.addListener((message: ExtensionMessage) => {
+chrome.runtime.onMessage.addListener((message: ExtensionMessage, _sender, sendResponse) => {
   if (message.type === 'RUNNER_START') void runner.start(message.config);
   if (message.type === 'RUNNER_STOP') runner.stop();
+  if (message.type === 'RUNNER_SNAPSHOT') sendResponse(runner.snapshot());
 });
