@@ -10,6 +10,8 @@ Al abrir el icono de la extensión durante una sesión activa, el popup muestra 
 
 Tras introducir el token y pulsar **Iniciar cerebro** una vez, la extensión guarda la activación en este navegador. El popup puede cerrarse: el cerebro continúa en el documento offscreen, se reconecta con espera progresiva si se corta la red y vuelve a arrancar automáticamente al abrir Chrome. **Detener** desactiva también los siguientes arranques automáticos.
 
+Como el cliente web, la extensión puede acoger temporalmente cerebros de moscas desconectadas. Anuncia automáticamente una capacidad de 0 a 3 moscas extra según los hilos de CPU, memoria estimada, ahorro de datos y tipo de puntero del dispositivo. Los cerebros extra funcionan a 5 Hz, se cargan uno a uno, reducen la capacidad si el cálculo se vuelve lento y se devuelven en cuanto regresa su propietaria.
+
 ## Desarrollo
 
 ```bash

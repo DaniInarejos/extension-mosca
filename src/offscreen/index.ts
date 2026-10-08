@@ -5,6 +5,7 @@ import type { FlyState, ServerMessage, WorldState } from '../simulation/protocol
 import type { ExtensionConfig, ExtensionMessage, FlySnapshot, RunnerStatus } from '../shared';
 import { restingPose } from '../simulation/behavior/index';
 import { DEFAULT_APPEARANCE } from '../simulation/protocol/appearance';
+import { VolunteerBrains } from '../volunteer';
 
 const SEND_INTERVAL_MS = 750;
 const FRAME_INTERVAL_MS = 1000 / 30;
@@ -14,6 +15,7 @@ class MoskaRunner {
   private socket?: WebSocket;
   private brain?: FlyWireAdapter;
   private behavior?: MotorBehavior;
+  private volunteers?: VolunteerBrains;
   private world?: WorldState;
   private fly?: FlyState;
   private frameTimer?: number;
@@ -52,6 +54,8 @@ class MoskaRunner {
     this.brain?.dispose();
     this.brain = undefined;
     this.behavior = undefined;
+    this.volunteers?.clear();
+    this.volunteers = undefined;
     this.world = undefined;
     this.fly = undefined;
     if (resetReconnect) this.reconnectAttempt = 0;
@@ -121,6 +125,8 @@ class MoskaRunner {
       this.socket = undefined;
       this.brain?.dispose();
       this.brain = undefined;
+      this.volunteers?.clear();
+      this.volunteers = undefined;
       window.clearInterval(this.frameTimer);
       this.frameTimer = undefined;
       if (this.config && event.code !== 1000) {
@@ -136,12 +142,16 @@ class MoskaRunner {
       this.fly = structuredClone(message.fly);
       this.behavior = new MotorBehavior(this.fly.flyId);
       this.behavior.reconcile(this.fly, this.world.objects);
+      this.volunteers = new VolunteerBrains((outgoing) => {
+        if (this.socket?.readyState === WebSocket.OPEN) this.socket.send(JSON.stringify(outgoing));
+      });
       const brain = (this.brain = new FlyWireAdapter(30));
       brain.onError = (detail) => void this.report('error', detail);
       await brain.initialize();
       if (brain !== this.brain || !this.fly) return;
       this.lastFrame = performance.now();
       this.frameTimer = window.setInterval(() => this.frame(), FRAME_INTERVAL_MS);
+      this.volunteers.announce(true);
       await this.report('online', 'Cerebro FlyWire activo y sincronizando.', this.fly.name);
       return;
     }
@@ -160,6 +170,9 @@ class MoskaRunner {
       }
       return;
     }
+    if (message.type === 'SIMULATION_LEASES' && this.world)
+      this.volunteers?.sync(message.leases, this.world);
+    if (message.type === 'SIMULATION_LEASE_REVOKED') this.volunteers?.revoke(message.leaseId);
     if (message.type === 'CORRECTION' && this.fly && message.fly.flyId === this.fly.flyId) {
       this.fly = structuredClone(message.fly);
       this.behavior?.reconcile(this.fly, this.world?.objects ?? []);
@@ -191,6 +204,7 @@ class MoskaRunner {
         (result.sensory.waterTaste ?? 0) > (result.sensory.foodTaste ?? 0) ? 'DRINK' : 'FEED';
       this.lastFeed = now;
     }
+    this.volunteers?.frame(now, elapsed, this.world);
     if (now - this.lastSend < SEND_INTERVAL_MS || this.socket?.readyState !== WebSocket.OPEN)
       return;
     this.socket.send(
