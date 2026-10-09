@@ -11,7 +11,10 @@ const optionalWorldFields = [
 export function applyWorldDelta(current: WorldState, delta: WorldDelta): WorldState {
   if (current.worldId !== delta.worldId) throw new Error('El jardín incremental no coincide.');
 
-  const flies = new Map(current.flies.map((fly) => [fly.flyId, fly]));
+  const changesFlies = Boolean(
+    delta.addedFlies?.length || delta.flies?.length || delta.removedFlyIds?.length,
+  );
+  const flies = new Map(changesFlies ? current.flies.map((fly) => [fly.flyId, fly]) : []);
   for (const fly of delta.addedFlies ?? []) flies.set(fly.flyId, fly);
   for (const patch of delta.flies ?? []) {
     const previous = flies.get(patch.flyId);
@@ -39,7 +42,7 @@ export function applyWorldDelta(current: WorldState, delta: WorldDelta): WorldSt
     ...current,
     tick: delta.tick,
     timestamp: delta.timestamp,
-    flies: [...flies.values()],
+    flies: changesFlies ? [...flies.values()] : current.flies,
     objects,
   };
   for (const field of optionalWorldFields) {

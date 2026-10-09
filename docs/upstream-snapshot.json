@@ -1,7 +1,8 @@
 {
   "project": "moscas.lol",
   "verifiedAt": "2026-10-08",
-  "verifiedCommit": "b2103b92c30259db775942597af14955dd4a9c81",
+  "verifiedCommit": "ba19b72",
+  "localAdaptations": "Stream v3 y vistas device/state display/control, adaptados al núcleo independiente del cliente.",
   "strategy": "copied-for-v0.1",
   "copies": [
     {

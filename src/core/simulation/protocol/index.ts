@@ -115,7 +115,12 @@ export interface FlyState extends FlyIdentity {
   rewardSuppressedUntil?: number;
   /** Server-owned bodily needs; legacy saves are initialized on load. */
   /** Food and hydration satisfaction reserves, both on a 0–100 scale. */
-  needs?: { hunger: number; hydration: number; updatedAt: number; scale?: 'food' };
+  needs?: {
+    hunger: number;
+    hydration: number;
+    updatedAt: number;
+    scale?: 'food';
+  };
   /** Permanent, server-owned end of this life. Absence means alive (legacy compatible). */
   death?: { at: number; cause: 'hunter'; hunterId: string } | { at: number; cause: 'exhaustion' };
   position: Vec3;
@@ -166,7 +171,13 @@ export interface EnergyPoint {
 export interface EnergyHistory {
   since: number;
   samples: EnergyPoint[];
-  daily: { day: string; sum: number; count: number; min: number; max: number }[];
+  daily: {
+    day: string;
+    sum: number;
+    count: number;
+    min: number;
+    max: number;
+  }[];
 }
 export type DashboardRange = 'all' | '24h' | '7d';
 export type DashboardCategory =
@@ -226,9 +237,18 @@ export interface FlyDashboard {
     exploration: number;
     session: number;
   }[];
-  energyHistory: { since: number | null; points: EnergyPoint[]; averaged: boolean };
+  energyHistory: {
+    since: number | null;
+    points: EnergyPoint[];
+    averaged: boolean;
+  };
   behaviors: Partial<Record<BodyBehavior, number>>;
-  history: { events: FlyEvent[]; page: number; pageSize: number; total: number };
+  history: {
+    events: FlyEvent[];
+    page: number;
+    pageSize: number;
+    total: number;
+  };
 }
 export type EventType =
   | 'ENTER_WORLD'
@@ -558,11 +578,22 @@ export type ServerMessage =
     }
   | { type: 'WORLD_STATE'; world: WorldState }
   | { type: 'WORLD_DELTA'; delta: WorldDelta }
+  | {
+      type: 'WORLD_FRAME';
+      sequence: number;
+      delta: import('./stream').StreamDelta;
+      control: FlyStatePatch[];
+    }
   | { type: 'EVENT'; event: FlyEvent }
   | { type: 'EVENT_HISTORY'; events: FlyEvent[] }
   | { type: 'CHAT_MESSAGE'; message: ChatMessage }
   | { type: 'POINTS_UPDATE'; points: PointsLive }
   | { type: 'SIMULATION_LEASES'; leases: SimulationLease[] }
-  | { type: 'SIMULATION_LEASE_REVOKED'; flyId: string; leaseId: string; reason: string }
+  | {
+      type: 'SIMULATION_LEASE_REVOKED';
+      flyId: string;
+      leaseId: string;
+      reason: string;
+    }
   | { type: 'CORRECTION'; fly: FlyState; reason: string }
   | { type: 'ERROR'; message: string };

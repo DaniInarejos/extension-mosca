@@ -28,7 +28,7 @@ it('rechaza respuestas incompletas y consulta el propietario actual', async () =
   vi.stubGlobal('fetch', request);
   await expect(webDeviceClient.ticket(config)).rejects.toThrow(DeviceResponseError);
   expect(await webDeviceClient.isFlyConnected(config)).toBe(true);
-  expect(request).toHaveBeenLastCalledWith('https://example.test/api/device/state', {
+  expect(request).toHaveBeenLastCalledWith('https://example.test/api/device/state?view=control', {
     headers: { Authorization: 'Bearer test-device-token' }, signal: expect.any(AbortSignal),
   });
 });
@@ -52,7 +52,7 @@ it('envía solo el ticket en el WebSocket y conserva mensajes y códigos de cier
   };
   const connection = webDeviceClient.connect(config, 'ticket/with?symbols', events);
   const socket = FakeSocket.instance;
-  expect(socket.url.href).toBe('wss://example.test/ws/device?ticket=ticket%2Fwith%3Fsymbols');
+  expect(socket.url.href).toBe('wss://example.test/ws/device?ticket=ticket%2Fwith%3Fsymbols&protocol=3');
   expect(socket.url.href).not.toContain(config.token);
   socket.onopen?.();
   expect(events.onOpen).toHaveBeenCalledOnce();

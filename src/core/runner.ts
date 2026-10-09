@@ -1,3 +1,5 @@
+import { GardenStream } from './runtime/garden-stream';
+import { ObservationCadence } from './runtime/observation-cadence';
 import { MotorBehavior } from './simulation/behavior/index';
 import { advanceLocalFly } from './simulation/physics/local-step';
 import type { FlyState, ServerMessage, WorldState } from './simulation/protocol/index';
@@ -9,9 +11,8 @@ import { VolunteerBrains } from './volunteer';
 import { DeviceResponseError } from './api/device-error';
 import { MAX_RECONNECT_DELAY_MS, SERVER_SILENCE_TIMEOUT_MS, WELCOME_TIMEOUT_MS } from './connection-policy';
 
-const SEND_INTERVAL_MS = 750;
 const FRAME_INTERVAL_MS = 1000 / 30;
-const CONTROL_CHECK_INTERVAL_MS = 5_000;
+const CONTROL_CHECK_INTERVAL_MS = 15_000;
 
 export class MoskaRunner {
   private config?: RunnerConfig;
@@ -29,7 +30,10 @@ export class MoskaRunner {
   private welcomed = false;
   private reconnectAttempt = 0;
   private lastFrame = 0;
-  private lastSend = 0;
+  private stream = new GardenStream();
+  private cadence = new ObservationCadence();
+  private trace: FlyState['position'][] = [];
+  private lastCheckpoint = 0;
   private lastFeed = 0;
   private pendingAction?: 'FEED' | 'DRINK';
   private generation = 0;
@@ -57,6 +61,7 @@ export class MoskaRunner {
   }
 
   stop(report = true, resetReconnect = true) {
+    this.checkpoint();
     this.generation++;
     this.frameTimer?.();
     this.reconnectTimer?.();
@@ -81,6 +86,10 @@ export class MoskaRunner {
     this.world = undefined;
     this.fly = undefined;
     this.pendingAction = undefined;
+    this.stream = new GardenStream();
+    this.cadence = new ObservationCadence();
+    this.trace = [];
+    this.lastFeed = this.lastCheckpoint = 0;
     if (resetReconnect) this.reconnectAttempt = 0;
     if (report) void this.report('idle', 'El cerebro está detenido.');
   }
@@ -167,9 +176,9 @@ export class MoskaRunner {
 
   private async message(message: ServerMessage) {
     if (message.type === 'WELCOME') {
-      this.world = message.world;
+      this.world = this.stream.apply(message)!;
       this.fly = structuredClone(message.fly);
-      this.behavior = new MotorBehavior(this.fly.flyId);
+      this.behavior = new MotorBehavior(this.fly.flyId, this.fly.bodyMemory?.value);
       this.behavior.reconcile(this.fly, this.world.objects);
       this.volunteers = new VolunteerBrains(
         (outgoing) => {
@@ -193,11 +202,24 @@ export class MoskaRunner {
       await this.report('online', 'Cerebro FlyWire activo y sincronizando.', this.fly.name);
       return;
     }
-    if (message.type === 'WORLD_STATE') {
-      this.world = message.world;
+    if (
+      message.type === 'WORLD_STATE' ||
+      message.type === 'WORLD_DELTA' ||
+      message.type === 'WORLD_FRAME'
+    ) {
+      this.world = this.stream.apply(message, this.fly)!;
+      if (message.type === 'WORLD_FRAME') this.volunteers?.updateControl(message.control);
       const authoritative =
-        this.fly && message.world.flies.find((fly) => fly.flyId === this.fly!.flyId);
+        this.fly && this.world.flies.find((fly) => fly.flyId === this.fly!.flyId);
       if (authoritative && this.fly) {
+        const wasIntervention = Boolean(this.fly.intervention);
+        if (wasIntervention || authoritative.intervention) {
+          this.trace = [];
+          this.fly.position = [...authoritative.position];
+          this.fly.velocity = [...authoritative.velocity];
+          this.fly.rotation = [...authoritative.rotation];
+          this.fly.body = structuredClone(authoritative.body);
+        }
         this.fly.energy = authoritative.energy;
         this.fly.needs = structuredClone(authoritative.needs);
         this.fly.intent = structuredClone(authoritative.intent);
@@ -205,6 +227,8 @@ export class MoskaRunner {
         this.fly.intervention = structuredClone(authoritative.intervention);
         this.fly.death = structuredClone(authoritative.death);
         this.fly.status = authoritative.status;
+        if (wasIntervention && !this.fly.intervention)
+          this.behavior?.reconcile(this.fly, this.world.objects);
       }
       return;
     }
@@ -212,6 +236,7 @@ export class MoskaRunner {
       this.volunteers?.sync(message.leases, this.world);
     if (message.type === 'SIMULATION_LEASE_REVOKED') this.volunteers?.revoke(message.leaseId);
     if (message.type === 'CORRECTION' && this.fly && message.fly.flyId === this.fly.flyId) {
+      this.trace = [];
       this.fly = structuredClone(message.fly);
       this.behavior?.reconcile(this.fly, this.world?.objects ?? []);
       return;
@@ -224,12 +249,19 @@ export class MoskaRunner {
     const now = this.dependencies.clock.now();
     const elapsed = Math.min(0.1, Math.max(0, (now - this.lastFrame) / 1000));
     this.lastFrame = now;
+    this.volunteers?.frame(now, elapsed, this.world);
+    if (this.fly.intervention) return;
     const result = advanceLocalFly(
       this.world,
       this.fly,
       this.behavior,
       (sensory, dt) => this.brain!.step(sensory, dt),
       elapsed,
+      (position) => {
+        this.trace.push(position);
+        if (this.trace.length > 16)
+          this.trace = this.trace.filter((_, i) => i % 2 === 0 || i === this.trace.length - 1);
+      },
     );
     if (
       result.sensory &&
@@ -242,31 +274,40 @@ export class MoskaRunner {
         (result.sensory.waterTaste ?? 0) > (result.sensory.foodTaste ?? 0) ? 'DRINK' : 'FEED';
       this.lastFeed = now;
     }
-    this.volunteers?.frame(now, elapsed, this.world);
-    if (now - this.lastSend < SEND_INTERVAL_MS || !this.socket?.isOpen()) return;
-    this.socket.send({
+    if (now - this.lastCheckpoint >= 10_000) this.checkpoint();
+    if (!this.socket?.isOpen() || !this.cadence.due(this.fly, now)) return;
+    this.socket?.send({
       type: 'FLY_STATE',
       flyId: this.fly.flyId,
       position: this.fly.position,
       velocity: this.fly.velocity,
       rotation: this.fly.rotation,
       body: this.fly.body,
+      path: this.trace.length
+        ? this.trace.map((p) => p.map((v) => Math.round(v * 100000) / 100000) as FlyState['position'])
+        : undefined,
       timestamp: this.dependencies.clock.timestamp(),
     });
     if (this.pendingAction) {
-      this.socket.send({
+      this.socket?.send({
         type: 'FLY_ACTION',
         action: this.pendingAction,
         timestamp: this.dependencies.clock.timestamp(),
       });
       delete this.pendingAction;
     }
-    this.lastSend = now;
+    this.trace = [];
+  }
+
+  private checkpoint() {
+    if (!this.fly || !this.behavior || this.fly.death || this.fly.intervention || !this.socket?.isOpen()) return;
+    this.socket.send({ type: 'BODY_CHECKPOINT', flyId: this.fly.flyId, value: this.behavior.checkpoint(), timestamp: this.dependencies.clock.timestamp() });
+    this.lastCheckpoint = this.dependencies.clock.now();
   }
 
   private scheduleReconnect() {
     if (!this.config || this.reconnectTimer) return;
-    const delay = Math.min(MAX_RECONNECT_DELAY_MS, 1000 * 2 ** this.reconnectAttempt++);
+    const delay = Math.min(MAX_RECONNECT_DELAY_MS, 1000 * 2 ** Math.min(this.reconnectAttempt++, 5));
     this.reconnectTimer = this.dependencies.clock.setTimeout(() => {
       this.reconnectTimer = undefined;
       if (this.config) void this.start(this.config, false);
