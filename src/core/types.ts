@@ -6,6 +6,8 @@ export type RunnerStatus = {
 };
 
 export type FlySnapshot = {
+  /** Consumo local observado, no una orden ni una recompensa confirmada. */
+  feeding?: 'food' | 'water';
   name: string;
   energy: number;
   status: string;
@@ -33,6 +35,14 @@ export type FlySnapshot = {
 export type RunnerConfig = {
   serverUrl: string;
   token: string;
+};
+
+export type NeuralSnapshot = import('./simulation/protocol/index').NeuralActivity & { session: number };
+
+/** Resumen de lectura; no incluye usuarios, credenciales ni el mundo completo. */
+export type GardenSnapshot = {
+  timestamp: number;
+  receivedAt: number;
 };
 import type { z } from 'zod';
 import type { clientMessageSchema } from './simulation/protocol/index';

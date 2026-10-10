@@ -1,0 +1,28 @@
+appId: lol.moscas.desktop
+productName: Moscas
+directories:
+  app: dist-desktop
+  output: release-desktop
+files:
+  - '**/*'
+asar: true
+asarUnpack:
+  - brain/**
+mac:
+  icon: src/clients/desktop/app-icon.png
+  target:
+    - target: dmg
+      arch: [arm64, x64]
+    - target: zip
+      arch: [arm64, x64]
+  category: public.app-category.entertainment
+win:
+  target:
+    - target: nsis
+      arch: [x64, arm64]
+  icon: public/moska.ico
+nsis:
+  oneClick: false
+  perMachine: false
+  allowToChangeInstallationDirectory: true
+  deleteAppDataOnUninstall: false

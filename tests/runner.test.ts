@@ -260,3 +260,96 @@ describe('ciclo de vida del núcleo sin Chrome ni DOM', () => {
     expect(vi.getTimerCount()).toBe(0);
   });
 });
+
+
+describe('arranque automático respetuoso con otros clientes', () => {
+  it('consulta primero y no obtiene ticket mientras la mosca está controlada', async () => {
+    const h = harness();
+    vi.mocked(h.device.isFlyConnected).mockResolvedValueOnce(true).mockResolvedValueOnce(false);
+    await h.runner.startWhenAvailable(config);
+    expect(h.device.ticket).not.toHaveBeenCalled();
+    expect(h.statuses.at(-1)?.state).toBe('paused');
+    await vi.advanceTimersByTimeAsync(15_000);
+    expect(h.device.ticket).toHaveBeenCalledOnce();
+    h.runner.stop();
+  });
+  it('un error HTTP en la consulta automática no autoriza a solicitar un ticket', async () => {
+    const h = harness();
+    vi.mocked(h.device.isFlyConnected).mockRejectedValue(new DeviceResponseError('No disponible'));
+    await h.runner.startWhenAvailable(config);
+    await vi.advanceTimersByTimeAsync(45_000);
+    expect(h.device.ticket).not.toHaveBeenCalled();
+    h.runner.stop();
+    expect(vi.getTimerCount()).toBe(0);
+  });
+  it('Detener cancela la consulta inicial y descarta un resultado tardío', async () => {
+    const h = harness();
+    let finish!: (connected: boolean) => void;
+    vi.mocked(h.device.isFlyConnected).mockReturnValue(new Promise((resolve) => { finish = resolve; }));
+    const pending = h.runner.startWhenAvailable(config);
+    await vi.advanceTimersByTimeAsync(0);
+    const signal = vi.mocked(h.device.isFlyConnected).mock.calls[0][1]!;
+    h.runner.stop(); finish(false); await pending;
+    expect(signal.aborted).toBe(true);
+    expect(h.device.ticket).not.toHaveBeenCalled();
+  });
+});
+
+it('resume solo el reloj del jardín, sin eventos ni identidades, y lo borra al detener', async () => {
+  const h = harness();
+  await h.runner.start(config);
+  const initial = welcome();
+  initial.world.naturalEvent = { id: 'rain', code: 'rain', startedAt: 0, endsAt: 50_000, seed: 1 };
+  await h.sessions[0].events.onMessage(initial);
+  const garden = h.runner.gardenSnapshot()!;
+  expect(garden).toEqual({ timestamp: initial.world.timestamp, receivedAt: expect.any(Number) });
+  garden.timestamp = -100;
+  expect(h.runner.gardenSnapshot()!.timestamp).toBe(initial.world.timestamp);
+  h.runner.stop();
+  expect(h.runner.gardenSnapshot()).toBeUndefined();
+});
+
+it.each(['food', 'water'] as const)('el retrato distingue consumo de %s y retira el accesorio al dejar de alimentarse', async (kind) => {
+  const h = harness();
+  h.brainFactory.mockImplementation(() => {
+    const brain = createBrain();
+    vi.mocked(brain.step).mockReturnValue({ forward: 0, turn: 0, lift: 0, feed: 1 });
+    return brain;
+  });
+  await h.runner.start(config);
+  const initial = welcome();
+  initial.fly.position = [0, 0.25, 0];
+  initial.fly.needs = { hunger: kind === 'food' ? 10 : 100, hydration: kind === 'water' ? 10 : 100, updatedAt: 0, scale: 'food' };
+  initial.world.objects = [{ id: 'snack', name: 'Recurso', type: kind, position: [0, 0, 0], radius: 1, amount: 10 }];
+  await h.sessions[0].events.onMessage(initial);
+  await vi.advanceTimersByTimeAsync(250);
+  expect(h.runner.snapshot()).toMatchObject({ feeding: kind, pose: { behavior: 'FEED' } });
+  await h.sessions[0].events.onMessage({ type: 'WORLD_STATE', world: { ...initial.world, objects: [] } });
+  await vi.advanceTimersByTimeAsync(100);
+  expect(h.runner.snapshot()?.feeding).toBeUndefined();
+  h.runner.stop();
+  expect(h.runner.snapshot()).toBeUndefined();
+});
+
+it('expone una copia de la actividad propietaria sin iniciar otro cerebro y la retira al parar', async () => {
+  const h = harness();
+  expect(h.runner.neuralSnapshot()).toBeUndefined();
+  expect(h.brainFactory).not.toHaveBeenCalled();
+  await h.runner.start(config);
+  expect(h.runner.neuralSnapshot()).toBeUndefined();
+  await h.sessions[0].events.onMessage(welcome());
+  const brain = h.brainFactory.mock.results[0].value;
+  const activity = { tick: 12, fired: 7, neurons: 100, edges: 200, tickMs: .2, groups: [3, 4], groupActive: [1, 1], motor: { forward: .3, turn: -.1, lift: 0, feed: .2 } };
+  brain.getActivity = () => activity;
+  const snapshot = h.runner.neuralSnapshot()!;
+  expect(snapshot).toMatchObject(activity);
+  snapshot.groups[0] = 999; snapshot.motor.forward = 1;
+  expect(activity.groups[0]).toBe(3);
+  expect(activity.motor.forward).toBe(.3);
+  h.runner.stop();
+  expect(h.runner.neuralSnapshot()).toBeUndefined();
+  await h.runner.start(config);
+  await h.sessions[1].events.onMessage(welcome());
+  expect(h.runner.neuralSnapshot()!.session).not.toBe(snapshot.session);
+  h.runner.stop();
+});

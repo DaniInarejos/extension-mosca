@@ -3,7 +3,7 @@ import { ObservationCadence } from './runtime/observation-cadence';
 import { MotorBehavior } from './simulation/behavior/index';
 import { advanceLocalFly } from './simulation/physics/local-step';
 import type { FlyState, ServerMessage, WorldState } from './simulation/protocol/index';
-import type { RunnerConfig, FlySnapshot, RunnerStatus } from './types';
+import type { RunnerConfig, FlySnapshot, RunnerStatus, GardenSnapshot, NeuralSnapshot } from './types';
 import type { Brain, CancelTimer, GardenConnection, RunnerDependencies } from './ports';
 import { restingPose } from './simulation/behavior/index';
 import { DEFAULT_APPEARANCE } from './simulation/protocol/appearance';
@@ -36,7 +36,10 @@ export class MoskaRunner {
   private lastCheckpoint = 0;
   private lastFeed = 0;
   private pendingAction?: 'FEED' | 'DRINK';
+  private feeding?: FlySnapshot['feeding'];
   private generation = 0;
+  private passiveStart = false;
+  private garden?: GardenSnapshot;
 
   constructor(private dependencies: RunnerDependencies) {}
 
@@ -60,9 +63,20 @@ export class MoskaRunner {
     }
   }
 
+  /** Arranque automático sin desplazar al cliente que ya conserva el control. */
+  async startWhenAvailable(config: RunnerConfig) {
+    this.stop(false);
+    this.config = config;
+    this.passiveStart = true;
+    const generation = this.generation;
+    await this.report('paused', 'Comprobando si la mosca está libre; se respetará el control de otros clientes.');
+    if (generation === this.generation) await this.checkControlAvailability(generation);
+  }
+
   stop(report = true, resetReconnect = true) {
     this.checkpoint();
     this.generation++;
+    this.passiveStart = false;
     this.frameTimer?.();
     this.reconnectTimer?.();
     this.controlCheckTimer?.();
@@ -84,8 +98,10 @@ export class MoskaRunner {
     this.volunteers?.clear();
     this.volunteers = undefined;
     this.world = undefined;
+    this.garden = undefined;
     this.fly = undefined;
     this.pendingAction = undefined;
+    this.feeding = undefined;
     this.stream = new GardenStream();
     this.cadence = new ObservationCadence();
     this.trace = [];
@@ -98,6 +114,11 @@ export class MoskaRunner {
     if (!this.fly) return;
     const pose = this.fly.body ?? restingPose();
     return {
+      feeding: pose.behavior === 'FEED' && !this.fly.death
+        ? this.fly.intervention
+          ? this.fly.intervention.code === 'drink' ? 'water' : this.fly.intervention.code === 'eat' ? 'food' : undefined
+          : this.feeding
+        : undefined,
       name: this.fly.name,
       energy: Math.max(0, Math.min(100, this.fly.energy)),
       status: this.fly.status,
@@ -117,6 +138,21 @@ export class MoskaRunner {
       },
       updatedAt: this.dependencies.clock.timestamp(),
     };
+  }
+
+  gardenSnapshot(): GardenSnapshot | undefined { return this.garden && { ...this.garden }; }
+
+  /** Solo el cerebro propietario, sin mezclar la actividad de las voluntarias. */
+  neuralSnapshot(): NeuralSnapshot | undefined {
+    if (!this.brain) return;
+    const { tick, fired, neurons, edges, tickMs, groups, groupActive, motor } = this.brain.getActivity();
+    return { session: this.generation, tick, fired, neurons, edges, tickMs,
+      groups: [...groups], groupActive: groupActive && [...groupActive], motor: { ...motor } };
+  }
+
+  private rememberGarden() {
+    if (!this.world) return;
+    this.garden = { timestamp: this.world.timestamp, receivedAt: this.dependencies.clock.timestamp() };
   }
 
   private connect(ticket: string) {
@@ -178,6 +214,7 @@ export class MoskaRunner {
     if (message.type === 'WELCOME') {
       this.world = this.stream.apply(message)!;
       this.fly = structuredClone(message.fly);
+      this.rememberGarden();
       this.behavior = new MotorBehavior(this.fly.flyId, this.fly.bodyMemory?.value);
       this.behavior.reconcile(this.fly, this.world.objects);
       this.volunteers = new VolunteerBrains(
@@ -208,6 +245,7 @@ export class MoskaRunner {
       message.type === 'WORLD_FRAME'
     ) {
       this.world = this.stream.apply(message, this.fly)!;
+      this.rememberGarden();
       if (message.type === 'WORLD_FRAME') this.volunteers?.updateControl(message.control);
       const authoritative =
         this.fly && this.world.flies.find((fly) => fly.flyId === this.fly!.flyId);
@@ -236,6 +274,7 @@ export class MoskaRunner {
       this.volunteers?.sync(message.leases, this.world);
     if (message.type === 'SIMULATION_LEASE_REVOKED') this.volunteers?.revoke(message.leaseId);
     if (message.type === 'CORRECTION' && this.fly && message.fly.flyId === this.fly.flyId) {
+      this.feeding = undefined;
       this.trace = [];
       this.fly = structuredClone(message.fly);
       this.behavior?.reconcile(this.fly, this.world?.objects ?? []);
@@ -263,6 +302,9 @@ export class MoskaRunner {
           this.trace = this.trace.filter((_, i) => i % 2 === 0 || i === this.trace.length - 1);
       },
     );
+    this.feeding = result.sensory && result.motor && result.sensory.taste > 0 && result.motor.feed > 0.2
+      ? (result.sensory.waterTaste ?? 0) > (result.sensory.foodTaste ?? 0) ? 'water' : 'food'
+      : undefined;
     if (
       result.sensory &&
       result.motor &&
@@ -339,7 +381,10 @@ export class MoskaRunner {
       if (generation !== this.generation) return;
       if (error instanceof DeviceResponseError) {
         await this.report('error', error.message);
-        if (generation === this.generation) this.scheduleReconnect();
+        if (generation === this.generation) {
+          if (this.passiveStart) this.scheduleControlCheck();
+          else this.scheduleReconnect();
+        }
       } else {
         this.scheduleControlCheck();
       }

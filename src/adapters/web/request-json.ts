@@ -1,7 +1,7 @@
 import { HTTP_TIMEOUT_MS } from '../../core/connection-policy';
 
 /** Limita tanto la llegada de cabeceras como la lectura del cuerpo y permite cancelar al parar. */
-export async function requestJson<T>(url: string, init: RequestInit, signal?: AbortSignal) {
+export async function requestJson<T>(url: string, init: RequestInit, signal?: AbortSignal, request: typeof fetch = fetch) {
   const controller = new AbortController();
   const cancel = () => controller.abort();
   if (signal?.aborted) cancel();
@@ -10,7 +10,7 @@ export async function requestJson<T>(url: string, init: RequestInit, signal?: Ab
     controller.abort(new Error('Tiempo de espera agotado al contactar con moscas.lol.'));
   }, HTTP_TIMEOUT_MS);
   try {
-    const response = await fetch(url, { ...init, signal: controller.signal });
+    const response = await request(url, { ...init, signal: controller.signal });
     let data: T;
     try {
       data = await response.json() as T;
