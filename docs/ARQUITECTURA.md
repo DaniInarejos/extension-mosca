@@ -1,7 +1,7 @@
 # Arquitectura de los clientes Moskas
 
 El repositorio mantiene un núcleo común para la extensión de Chrome y los futuros
-clientes de Firefox y escritorio. Por ahora se compila y distribuye solo Chrome.
+clientes de Firefox y escritorio. Se compilan Chrome y un compañero Electron para Windows/macOS.
 Las capas viven en un proyecto TypeScript y una instalación de npm; no necesitan
 paquetes publicados ni herramientas de monorepo.
 
@@ -26,6 +26,9 @@ src/
     offscreen.ts          Construcción del runner y enlace de mensajes
     messages.ts           Mensajes y configuración propios de la extensión
     popup/                Interfaz del cliente Chrome
+  adapters/desktop/       Transporte Node, worker_threads y capacidad del sistema
+  clients/desktop/        Bandeja, ventana, IPC, persistencia y energía de Electron
+  clients/shared/         Retrato y estilos compartidos entre clientes
   brain/                  Fuentes y modelo neuronal copiados de upstream
 ```
 
@@ -48,7 +51,13 @@ modificar su contenido.
 | `volunteerCapacity` | Límite de cerebros extra que ofrece este cliente |
 | `onStatus` | Entregar el estado al almacenamiento o a la interfaz del cliente |
 
-El cliente llama a `start({ serverUrl, token })`, `stop()` y `snapshot()`. La decisión
+El cliente llama a `start({ serverUrl, token })`, `stop()` y `snapshot()`.
+`gardenSnapshot()` expone únicamente el reloj del jardín y la fecha de recepción;
+no contiene eventos, puntos, el mundo completo ni identidades. Se vacía al detenerse. `neuralSnapshot()` devuelve una copia de la actividad
+del cerebro propietario y un identificador de sesión local para la visualización; no
+inicia trabajadores ni mezcla actividad de cerebros voluntarios.
+`startWhenAvailable(config)` reutiliza la consulta de control antes del primer ticket;
+escritorio lo utiliza al restaurar o despertar para no desplazar otra sesión. La decisión
 de recordar la activación, arrancar con el sistema o conservar el token pertenece
 al cliente. El núcleo no conoce `chrome.storage`, IPC ni ventanas.
 
@@ -97,8 +106,9 @@ refactorización. Las reglas de autoridad del servidor permanecen sin cambios.
 
 No se debe copiar el bucle de simulación ni el protocolo para cada plataforma. Tampoco
 debe incorporarse Electron, una API de Firefox o un almacén de credenciales al núcleo.
-La interfaz actual permanece en Chrome hasta que otro cliente necesite compartir partes
-concretas de ella.
+El retrato y los estilos viven en `clients/shared/`; la gestión de credenciales y los
+controles de cada plataforma permanecen en su cliente. El modelo de ejecución y las
+decisiones de seguridad de escritorio están en [ESCRITORIO.md](ESCRITORIO.md).
 
 ## Verificación y actualizaciones de upstream
 

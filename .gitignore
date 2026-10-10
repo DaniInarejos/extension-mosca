@@ -11,3 +11,5 @@ public/brain/flywire-worker.js
 *.crx
 playwright-report/
 blob-report/
+dist-desktop/
+release-desktop/

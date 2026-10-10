@@ -1,0 +1,16 @@
+.feeding-prop { pointer-events: none; }
+.feeding-fruit, .feeding-water { opacity: 0; transform: scale(.85); transform-box: fill-box; transform-origin: center; }
+/* Sin salida diferida: detener, desconectar o dejar de comer retira el objeto al instante. */
+.fly-avatar[data-feeding='food'] .feeding-fruit,
+.fly-avatar[data-feeding='water'] .feeding-water { opacity: 1; transform: none; animation: snack-appear 180ms cubic-bezier(.22, 1, .36, 1) both; }
+.snack-shadow { fill: #34432c; opacity: .13; }
+.fruit-skin { fill: #c56a4f; stroke: #743f32; stroke-width: 1.2; }
+.fruit-shine { fill: none; stroke: #f2b68a; stroke-width: 2; stroke-linecap: round; }
+.fruit-stem { fill: none; stroke: #625139; stroke-width: 1.6; stroke-linecap: round; }
+.fruit-leaf { fill: #7f9d54; stroke: #4c6e3b; stroke-width: 1; }
+.water-pool { fill: #a2cdd0; stroke: #578c94; stroke-width: 1; }
+.water-ripple, .water-glint { fill: none; stroke: #edf4df; stroke-width: 1.2; }
+.fly-avatar[data-feeding='water'] .water-ripple { transform-box: fill-box; transform-origin: center; animation: sip-ripple 1.4s ease-out infinite; }
+@keyframes snack-appear { from { opacity: 0; transform: scale(.85) translateY(3px); } to { opacity: 1; transform: none; } }
+@keyframes sip-ripple { from { opacity: .9; transform: scale(.65); } to { opacity: .15; transform: scale(1.5); } }
+@media (prefers-reduced-motion: reduce) { .feeding-prop, .feeding-prop * { animation: none !important; transition: none !important; } }

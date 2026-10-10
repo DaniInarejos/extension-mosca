@@ -1,0 +1,24 @@
+.brain-view { margin: 0 0 16px; }
+.brain-view > summary { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+#brain-state { font-size: 10px; font-weight: 400; color: #6d6a5e; }
+#brain-state[data-live='true'] { color: #476b32; }
+.brain-content { padding: 10px 12px; }
+#brain-canvas { display: block; width: 100%; height: 180px; cursor: grab; touch-action: none; }
+#brain-canvas:active { cursor: grabbing; }
+.brain-stage { margin: 0 -2px 8px; border-radius: 12px; background: radial-gradient(ellipse at 50% 42%, #263c31, #14241f); color: #ced9c9; overflow: hidden; }
+.brain-stage-heading { display: flex; justify-content: space-between; padding: 10px 12px 0; font-size: 9px; letter-spacing: .08em; }
+.brain-orbit { display: flex; align-items: center; justify-content: space-between; padding: 0 12px 12px; font-size: 10px; color: #b0c2b1; }
+.brain-orbit > div { display: flex; gap: 4px; }
+.brain-orbit button { border: 1px solid #52665a; border-radius: 5px; padding: 5px 8px; min-height: 28px; background: #24372c; color: #d8e4d2; font: inherit; cursor: pointer; }
+.brain-orbit button:hover { background: #354b3c; }
+.brain-orbit button:focus-visible { outline: 2px solid #d4e7af; outline-offset: 2px; }
+.brain-legend { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; font-size: 10px; color: #666d59; }
+.brain-legend span::before { content: ''; display: inline-block; width: 6px; height: 6px; border-radius: 50%; margin-right: 4px; background: #aab29a; }
+.brain-legend .spike::before { background: #497a39; }
+.brain-legend .processing::before { background: #b28b45; }
+.brain-metrics { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; padding: 9px 0; margin-top: 9px; border-top: 1px solid #d5d2c2; border-bottom: 1px solid #d5d2c2; }
+.brain-metrics strong, .brain-metrics span { display: block; }
+.brain-metrics strong { font-size: 16px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.brain-metrics span { font-size: 10px; color: #6d6a5e; margin-top: 3px; }
+.brain-motor { display: flex; flex-wrap: wrap; gap: 10px; margin: 9px 0 6px; font-size: 10px; font-variant-numeric: tabular-nums; color: #526337; }
+.brain-footnote { margin-top: 9px; font-size: 10px; line-height: 1.5; color: #6d6a5e; }
