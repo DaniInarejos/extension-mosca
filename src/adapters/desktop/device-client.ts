@@ -10,12 +10,16 @@ const DEVICE_ORIGIN = 'chrome-extension://emfpeffhjoceehcmlhceehnkdihglhgn';
 export const AUTHENTICATION_ERROR = 'El servidor rechazó el token. Pulsa Detener y vincula un token de dispositivo válido.';
 
 /** HTTP/WSS de Node: comparte protocolo, cancelación, deadlines y backpressure con Chrome. */
-export function desktopDeviceClient(proxy?: string) {
+export function desktopDeviceClient(version: string, proxy?: string) {
+  // La versión la aporta el cliente; HTTP y WSS comparten identidad sin datos personales.
+  const userAgent = `MoscasDesktop/${version} (${process.platform}; ${process.arch})`;
   const makeDispatcher = () => proxy ? new ProxyAgent(proxy) : new Agent();
   const http = makeDispatcher();
   const sockets = new Set<ReturnType<typeof makeDispatcher>>();
   const request = (async (url, init) => {
-    const response = await fetch(url as string, { ...init, dispatcher: http } as Parameters<typeof fetch>[1]);
+    const headers = new Headers(init?.headers);
+    headers.set('User-Agent', userAgent);
+    const response = await fetch(url as string, { ...init, headers, dispatcher: http } as Parameters<typeof fetch>[1]);
     if (response.status === 401 || response.status === 403) {
       await response.body?.cancel();
       throw new DeviceResponseError(AUTHENTICATION_ERROR);
@@ -30,7 +34,7 @@ export function desktopDeviceClient(proxy?: string) {
         // Cada socket tiene su propio transporte, para acotar también el cierre con TCP atascado.
         const dispatcher = makeDispatcher();
         sockets.add(dispatcher);
-        const socket = new WebSocket(url, { dispatcher, headers: { Origin: DEVICE_ORIGIN } });
+        const socket = new WebSocket(url, { dispatcher, headers: { Origin: DEVICE_ORIGIN, 'User-Agent': userAgent } });
         let timer: ReturnType<typeof setTimeout> | undefined;
         const release = () => {
           clearTimeout(timer);

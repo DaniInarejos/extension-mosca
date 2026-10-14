@@ -4,6 +4,7 @@ import { resolve } from 'node:path';
 import { brainMap } from './brain-map.mjs';
 
 const root = resolve(import.meta.dirname, '..');
+const { version } = JSON.parse(await readFile(resolve(root, 'package.json'), 'utf8'));
 const output = resolve(root, 'dist-desktop');
 await rm(output, { recursive: true, force: true });
 await mkdir(output, { recursive: true });
@@ -23,5 +24,5 @@ for (const icon of ['tray.png', 'trayTemplate.png', 'app-icon.png'])
 // Solo puente de mensajería; kernel, modelo y readout idénticos al worker Chromium.
 const worker = await readFile(resolve(root, 'public/brain/flywire-worker.js'), 'utf8');
 await writeFile(resolve(output, 'brain/flywire-node.cjs'), `const { parentPort } = require('node:worker_threads');\nglobalThis.self = globalThis;\nself.postMessage = (message) => parentPort.postMessage(message);\nparentPort.on('message', (data) => self.onmessage({ data }));\n${worker}`);
-await writeFile(resolve(output, 'package.json'), JSON.stringify({ name: 'moscas-desktop', productName: 'Moscas', version: '0.1.0', main: 'main.cjs', description: 'Compañero de escritorio para moscas.lol', author: 'Contribuidores de Moscas' }, null, 2));
+await writeFile(resolve(output, 'package.json'), JSON.stringify({ name: 'moscas-desktop', productName: 'Moscas', version, main: 'main.cjs', description: 'Compañero de escritorio para moscas.lol', author: 'Contribuidores de Moscas' }, null, 2));
 console.log('Cliente de escritorio generado en dist-desktop/.');

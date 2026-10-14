@@ -94,7 +94,7 @@ else {
     session.defaultSession.setPermissionCheckHandler(() => false);
     // El renderer no necesita acceso de red, ni siquiera con una navegación accidental.
     session.defaultSession.webRequest.onBeforeRequest({ urls: ['http://*/*', 'https://*/*', 'ws://*/*', 'wss://*/*'] }, (_details, callback) => callback({ cancel: true }));
-    transport = desktopDeviceClient(!app.isPackaged ? process.env.MOSCAS_DESKTOP_PROXY : undefined);
+    transport = desktopDeviceClient(app.getVersion(), !app.isPackaged ? process.env.MOSCAS_DESKTOP_PROXY : undefined);
     if (process.platform === 'darwin') app.dock?.setIcon(join(__dirname, 'app-icon.png'));
     runner = new MoskaRunner({
       device: transport.device, clock: webClock,

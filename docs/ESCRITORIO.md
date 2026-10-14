@@ -91,6 +91,23 @@ que exista una extensión instalada ni sustituye la autenticación mediante toke
 ticket de un solo uso. Solo se añade en el adaptador desktop; el núcleo y Chromium
 conservan su transporte. No se reutilizan cookies ni se inicia sesión en la web.
 
+### Identificación del cliente
+
+HTTP (incluidos tickets y consultas de control) y el handshake WebSocket envían
+`User-Agent: MoscasDesktop/<versión> (<plataforma>; <arquitectura>)`, por ejemplo
+`MoscasDesktop/0.1.0 (darwin; arm64)` o `MoscasDesktop/0.1.0 (win32; x64)`.
+La versión procede del mismo `package.json` que el paquete de escritorio. No incluye
+nombre del equipo, usuario ni credenciales. Chromium conserva sus cabeceras habituales.
+
+El `Origin` de compatibilidad se conserva exclusivamente en el handshake WebSocket.
+El servidor puede usar el User-Agent para distinguir escritorio de extensión; cambiar
+esta cabecera no garantiza que cambie la etiqueta mostrada si el backend clasifica
+por Origin u otro dato. No se ha verificado esa clasificación con una sesión autenticada
+tras este cambio; requiere un token vigente y acceso a la información del servidor.
+La validación local del 14/10/2026 pasó `npm run check`: 59 unitarias, cinco smoke
+Chromium y ocho Electron. Las pruebas del adaptador comprueban la identidad en ambos
+transportes, la conservación de Authorization y la normalización de cabeceras HTTP.
+
 ## Runtime y modelo de ejecución
 
 Se utiliza **Electron 44**, con TypeScript y una ventana pequeña sin framework de UI.
