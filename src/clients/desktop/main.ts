@@ -128,7 +128,8 @@ else {
     const state = (): DesktopState => ({
       enabled: controller!.settings.enabled, hasToken: Boolean(controller!.settings.encryptedToken),
       launchAtLogin: app.isPackaged && loginSettings().openAtLogin,
-      loginAvailable: app.isPackaged && ['darwin', 'win32'].includes(process.platform),
+      // El ejecutable portátil se extrae en una ruta temporal: no registrarla para login.
+      loginAvailable: app.isPackaged && !process.env.PORTABLE_EXECUTABLE_FILE && ['darwin', 'win32'].includes(process.platform),
       status: controller!.status, fly: controller!.settings.enabled ? runner!.snapshot() : undefined,
       garden: controller!.settings.enabled ? runner!.gardenSnapshot() : undefined,
     });

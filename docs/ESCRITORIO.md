@@ -220,16 +220,37 @@ Crear instaladores en su sistema de destino:
 ```bash
 # macOS: elegir --arm64, --x64 o ambas arquitecturas
 npm run package:desktop -- --mac --arm64
-# Windows: NSIS por usuario
-npm run package:desktop -- --win --x64
+# Windows: instalador NSIS por usuario
+npm run package:desktop -- --win nsis --x64
+# Windows: un único .exe portátil, sin instalación
+npm run package:desktop -- --win portable --x64
 # Paquete sin instalador para inspección local
 npm run package:desktop -- --dir
 ```
 
 Los resultados van a `release-desktop/`, excluido de Git. El builder usa ASAR con el
 cerebro fuera del archivo, incluye las licencias y nunca publica automáticamente.
-La configuración ofrece macOS arm64/x64 (DMG/ZIP) y Windows x64/arm64 (NSIS).
+La configuración ofrece macOS arm64/x64 (DMG/ZIP) y Windows x64/arm64 (NSIS/portable).
 Construir para una arquitectura no demuestra su funcionamiento en ese equipo.
+
+`win-unpacked/Moscas.exe` requiere toda su carpeta, incluidos DLL y `resources`.
+Para compartir un solo archivo, utilizar el instalador NSIS o el ejecutable
+`Moscas-<versión>-Windows-<arquitectura>-portable.exe`. Ambos incluyen Electron,
+Node, dependencias y assets del cerebro: no requieren instalar Node ni Chrome.
+El portátil extrae los archivos de ejecución en una carpeta temporal al arrancar;
+no es un binario enlazado estáticamente. Conserva configuración y token cifrado en
+el perfil del usuario del sistema, no junto al .exe ni en una memoria USB.
+El inicio automático con el sistema está deshabilitado en el portátil para evitar
+registrar una ruta temporal. Utilizar el instalador para esa función. La conexión
+al servicio sigue necesitando internet y un token de dispositivo.
+
+En la revisión de empaquetado del 14/10/2026 se lanzó la aplicación macOS arm64
+con perfiles temporales: preload, versión, mapa cerebral y disponibilidad del inicio
+automático correctos. Inyectar la variable del lanzador portátil deshabilita ese
+control; esto comprueba la rama de configuración, no ejecuta el .exe en Windows.
+Se generaron ZIP/app macOS arm64, portátil Windows x64 e instalador NSIS x64. Los
+paquetes incluyen el nuevo User-Agent y los assets locales con sus licencias.
+
 
 No se incluyen certificados, firma de Windows, credenciales Apple ni configuración de
 notarización. Configurarlos fuera del repositorio para una distribución pública firmada.
