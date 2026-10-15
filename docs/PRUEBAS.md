@@ -143,3 +143,40 @@ comprobación manual. Firefox también se probará manualmente cuando exista su 
 
 Referencias: [extensiones en Playwright](https://playwright.dev/docs/chrome-extensions)
 y [binarios de navegador](https://playwright.dev/docs/browsers).
+
+## Cliente de escritorio
+
+`npm run check` incluye también el build y smoke tests Electron. `npm run test:desktop`
+ejecuta solo los controles de escritorio sin token y `npm run test:desktop:live` exige
+el token para las sesiones reales y la cesión a Chromium. Los procesos y perfiles son
+independientes de los de la extensión. No ejecutar simultáneamente suites autenticadas
+con la misma cuenta. Véanse cobertura, comandos y límites en [ESCRITORIO.md](ESCRITORIO.md).
+
+Validación del 9 de octubre de 2026 (macOS arm64): los cuatro escenarios Chromium
+con autenticación y los seis escenarios desktop pasaron contra moscas.lol. Se incluyen
+cortes TCP reales, silencio, cancelación, persistencia, cesión a otro cliente, actividad
+neuronal y movimiento confirmado en el estado público del jardín. La suspensión física
+y la ejecución en Windows siguen siendo comprobaciones manuales; los eventos de energía
+de las pruebas desktop se inyectan mediante `powerMonitor`.
+
+La interfaz se centra en el cerebro, sin eventos, historial ni mosca flotante. No consulta
+el jardín con la sesión cerrada. Los tests comprueban que una configuración antigua de
+la mosca de escritorio no crea ventanas adicionales y conserva token y activación.
+
+La interfaz desktop usa un único botón Conectar/Desconectar. Los smoke tests comprueban
+el lienzo cerebral de 180 px sin selector; la prueba real conecta y desconecta desde ese
+mismo botón, comprueba que el resumen ambiental está dentro de la tarjeta de la mosca
+y que existe una única ventana durante la sesión. Desconectar limpia la mosca, el jardín
+y la actividad cerebral, conservando el token cifrado.
+
+Guardar token cifra y persiste sin activar la sesión; se comprueba con safeStorage real
+y un token de formato válido que nunca se envía a la red. Conectar permanece bloqueado
+hasta guardar, se habilita al reiniciar y vuelve a bloquearse al olvidar la credencial.
+La prueba autenticada recorre Guardar token → Conectar → Desconectar en la interfaz.
+
+Revisión del 10 de octubre de 2026: `npm run check` pasa con 55 unitarias, cinco smoke
+Chromium y ocho Electron tras retirar la mosca flotante. La sesión visual autenticada
+pasa al repetirla: el primer intento perdió el contador visible mientras avanzaban los
+ticks; la causa de esa intermitencia no está confirmada. El escenario comprueba una única
+ventana, movimiento en el servicio y limpieza al desconectar. No se repitieron las
+suites completas de cortes en esta revisión.

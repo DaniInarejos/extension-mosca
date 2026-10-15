@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self'; connect-src 'none'; base-uri 'none'; form-action 'none'" />
+  <title>Moscas</title>
+  <link rel="stylesheet" href="renderer.css" />
+</head>
+<body>
+  <main>
+    <header><div><h1>Moscas</h1><p>El cerebro de tu mosca.</p></div><button id="hide" class="secondary" aria-label="Ocultar ventana">Ocultar</button></header>
+      <section id="fly-card" class="fly-card" hidden>
+    <section id="garden" class="garden" hidden aria-label="Estado del jardín">
+      <span class="garden-orb" aria-hidden="true"></span>
+      <div><p id="garden-phase">El jardín</p><p id="garden-detail">Esperando conexión.</p></div>
+    </section>
+        <div class="fly-stage">
+          <svg
+            id="fly-avatar"
+            class="fly-avatar"
+            viewBox="0 0 220 140"
+            role="img"
+            aria-label="Tu mosca"
+          >
+            <!-- Copia adaptada del retrato original de apps/client/src/ui/fly-portrait.ts. -->
+            <ellipse class="fly-shadow" cx="110" cy="120" rx="43" ry="7" />
+            <g class="fly-motion">
+              <g class="fly-tilt">
+                <g class="fly-portrait-legs legs">
+                  <path class="leg leg-1" d="M97 66 74 49 61 50" />
+                  <path class="leg leg-2" d="M98 79 67 76 54 85" />
+                  <path class="leg leg-3" d="M98 91 74 102 67 118" />
+                  <path class="leg leg-4" d="M123 66 146 49 159 50" />
+                  <path class="leg leg-5" d="M122 79 153 76 166 85" />
+                  <path class="leg leg-6" d="M122 91 146 102 153 118" />
+                </g>
+                <g class="fly-body">
+                  <ellipse class="abdomen" cx="110" cy="94" rx="16" ry="25" />
+                  <path class="abdomen-band" d="M96 87h28m-29 9h30m-25 9h20" />
+                  <ellipse class="thorax" cx="110" cy="67" rx="17" ry="19" />
+                </g>
+                <g class="wings">
+                  <g class="wing wing-left">
+                    <ellipse
+                      cx="81"
+                      cy="90"
+                      rx="16"
+                      ry="34"
+                      transform="rotate(30 81 90)"
+                    />
+                  </g>
+                  <g class="wing wing-right">
+                    <ellipse
+                      cx="139"
+                      cy="90"
+                      rx="16"
+                      ry="34"
+                      transform="rotate(-30 139 90)"
+                    />
+                  </g>
+                </g>
+                <g class="head">
+                  <ellipse
+                    class="head-shell"
+                    cx="110"
+                    cy="45"
+                    rx="14"
+                    ry="13"
+                  />
+                  <ellipse
+                    class="eye eye-left"
+                    cx="100"
+                    cy="43"
+                    rx="7"
+                    ry="10"
+                    transform="rotate(-15 100 43)"
+                  />
+                  <ellipse
+                    class="eye eye-right"
+                    cx="120"
+                    cy="43"
+                    rx="7"
+                    ry="10"
+                    transform="rotate(15 120 43)"
+                  />
+                  <path class="antenna antenna-left" d="M103 37 98 23" />
+                  <path class="antenna antenna-right" d="M117 37 122 23" />
+                  <path class="proboscis" d="M110 56 Q110 67 106 74" />
+                </g>
+              </g>
+            </g>
+          </svg>
+        </div>
+        <div class="fly-summary">
+          <div>
+            <p id="fly-action" class="action-pill">Descansando</p>
+            <h2 id="fly-name">Tu mosca</h2>
+            <p id="fly-status" class="fly-status"></p>
+          </div>
+          <div class="energy-readout">
+            <span>Energía</span><strong id="energy-value">0%</strong>
+          </div>
+        </div>
+        <div
+          class="energy-track"
+          role="meter"
+          aria-label="Energía"
+          aria-valuemin="0"
+          aria-valuemax="100"
+          aria-valuenow="0"
+        >
+          <span id="energy-fill" class="energy-fill"></span>
+        </div>
+      </section>
+
+    <section id="empty"><h2 id="empty-title">Tu mosca, también aquí.</h2><p id="empty-detail">Vincula un token de dispositivo de moscas.lol. Su cerebro seguirá activo cuando cierres esta ventana.</p></section>
+    <div class="connection-status"><span id="status" class="status" data-kind="idle">Sesión cerrada</span><span class="service">moscas.lol</span></div>
+    <p id="detail" class="detail" role="status"></p>
+    <div class="session-controls"><button id="session-toggle" disabled aria-describedby="session-hint">Conectar</button><p id="session-hint" class="hint">Guarda un token de dispositivo en Ajustes para conectar tu mosca.</p></div>
+    <button id="website" class="garden-link"><span>Abrir el jardín<small>Tu mosca, la tienda y todo lo demás</small></span><span aria-hidden="true">↗</span></button>
+    <details id="brain-view" class="brain-view">
+      <summary>Ver mi cerebro <span id="brain-state">Sin actividad local</span></summary>
+      <div class="brain-content">
+        <div class="brain-stage">
+          <div class="brain-stage-heading"><span>FLYWIRE · v783</span><span>Todos los grupos</span></div>
+          <canvas id="brain-canvas" role="img" aria-label="Cerebro esquemático en tres dimensiones, sin actividad local" aria-describedby="brain-description"></canvas>
+          <div class="brain-orbit"><span>Arrastra para girar</span><div><button id="brain-left" type="button" aria-label="Girar cerebro a la izquierda">←</button><button id="brain-reset" type="button">Centrar</button><button id="brain-right" type="button" aria-label="Girar cerebro a la derecha">→</button></div></div>
+        </div>
+        <div class="brain-legend"><span class="spike">Disparando</span><span class="processing">Procesando</span><span class="quiet">En reposo</span></div>
+        <div class="brain-metrics"><p><strong id="brain-fired">—</strong><span>disparos / tick</span></p><p><strong id="brain-active">—</strong><span>grupos activos</span></p><p><strong id="brain-tick">—</strong><span>tick local</span></p></div>
+        <div class="brain-motor"><span id="brain-forward">Avance: —</span><span id="brain-turn">Giro: —</span><span id="brain-feed">Alimentación: —</span></div>
+        <p id="brain-note" class="hint">Conecta tu mosca para ver su actividad. Abrir esta vista no inicia una sesión.</p>
+        <p id="brain-model" class="hint"></p>
+        <p id="brain-description" class="brain-footnote">Forma cerebral ilustrada con 1.280 puntos representativos. El brillo muestra actividad real por grupos; no son posiciones ni disparos de neuronas individuales. Las líneas resumen conexiones del conectoma.</p>
+      </div>
+    </details>
+    <details id="connection">
+      <summary>Ajustes</summary>
+      <div class="connection-form">
+        <label for="token">Token de dispositivo</label>
+        <input id="token" type="password" autocomplete="off" spellcheck="false" placeholder="fly_device_…" />
+        <p id="token-hint" class="hint">Se cifra con el almacén seguro de tu sistema.</p>
+        <div class="token-actions"><button id="save-token" disabled>Guardar token</button><button id="forget" class="secondary">Olvidar dispositivo</button></div>
+        <label class="login"><input id="login" type="checkbox" />Abrir al iniciar sesión</label>
+        <p id="login-hint" class="hint"></p>
+      </div>
+    </details>
+    <footer><p>Cerrar la ventana mantiene el cerebro conectado.<br />Desconectar lo detiene también en próximos arranques.</p><button id="quit" class="secondary">Salir</button></footer>
+  </main>
+  <script src="renderer.js" defer></script>
+</body>
+</html>

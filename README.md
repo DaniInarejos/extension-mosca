@@ -16,9 +16,29 @@ El stream v3 transmite diferencias compactas y cambios privados de las moscas co
 
 Como el cliente web, la extensión puede acoger temporalmente cerebros de moscas desconectadas. Anuncia automáticamente una capacidad de 0 a 3 moscas extra según los hilos de CPU, memoria estimada, ahorro de datos y tipo de puntero del dispositivo. Los cerebros extra funcionan a 5 Hz, se cargan uno a uno, reducen la capacidad si el cálculo se vuelve lento y se devuelven en cuanto regresa su propietaria.
 
+## Compañero de escritorio
+
+Disponible una primera versión Electron para Windows y macOS. Ejecuta el mismo núcleo
+con workers Node, conserva el cerebro al cerrar la ventana y ofrece bandeja, inicio
+opcional con el sistema, token cifrado e instancia única. No muestra una mosca flotante
+sobre el escritorio: para observarla se utiliza el jardín web.
+La ventana muestra la mosca y el ambiente del jardín durante la sesión, una vista opcional
+del cerebro y un botón destacado para abrir el jardín web. Primero se guarda un token
+en Ajustes; después se habilita Conectar. Desconectar cierra la sesión y
+conserva el token cifrado para volver a iniciar. Los eventos y la tienda permanecen en la web.
+
+```bash
+npm ci
+npm run dev:desktop
+```
+
+**Desconectar** desactiva los próximos arranques. **Salir** libera el proceso conservando la
+activación elegida. Consulte [ESCRITORIO.md](docs/ESCRITORIO.md) para empaquetar, probar y
+conocer qué comprobaciones siguen pendientes en cada plataforma.
+
 ## Desarrollo
 
-Requiere Node.js 22 y npm. La compilación actual genera únicamente el cliente de Chrome.
+Requiere Node.js 22 y npm. `npm run build` genera Chrome; `npm run build:desktop` genera el cliente de escritorio.
 
 ```bash
 npm ci
@@ -72,8 +92,8 @@ una falsa impresión de cobertura. Consulta [la guía de pruebas](docs/PRUEBAS.m
 - `src/clients/chrome/`: background, documento offscreen, mensajes, almacenamiento y popup de Chrome.
 - `src/brain/` y `public/brain/`: fuentes del kernel, adaptador neuronal, modelo y datos FlyWire con su procedencia y atribución.
 
-Firefox y escritorio aún no están implementados. Se incorporarán como clientes del mismo
-núcleo, aportando su ciclo de vida, almacenamiento y adaptadores de plataforma.
+El cliente de escritorio añade `src/clients/desktop/` y `src/adapters/desktop/` sobre el
+mismo núcleo. Firefox queda pendiente como futuro cliente con sus propios adaptadores.
 Consulta [`docs/ARQUITECTURA.md`](docs/ARQUITECTURA.md) antes de añadir un cliente o cambiar
 estas responsabilidades.
 
